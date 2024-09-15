@@ -98,7 +98,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
   const [enemyData, setEnemyData] = useState<EnemyData | null>(null)
   const [currentTurn, setCurrentTurn] = useState<'player' | 'enemy' | null>(null);
-  const [healCooldown, setHealCooldown] = useState(3); // Start with 3 turn cooldown
+  const [healCooldown, setHealCooldown] = useState(0); // Start with 0 turn cooldown
   const [turnCount, setTurnCount] = useState(0); // Track the number of turns
 
   const fetchPlayerData = async (retryCount = 0) => {
@@ -426,7 +426,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
   }
 
   const heal = useCallback(() => {
-    if (healCooldown > 0 || currentTurn !== 'player' || gameOver || turnCount < 3 || !playerData) return;
+    if (healCooldown > 0 || currentTurn !== 'player' || gameOver || !playerData) return;
 
     const baseHeal = 10;
     const healAmount = Math.floor(baseHeal + (playerData.attributes.Defence * 0.5));
@@ -438,7 +438,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
 
     // Switch turn to enemy
     setCurrentTurn('enemy');
-  }, [playerHealth, playerData, healCooldown, currentTurn, gameOver, turnCount]);
+  }, [playerHealth, playerData, healCooldown, currentTurn, gameOver]);
 
   useEffect(() => {
     if (currentTurn === 'player') {
@@ -609,15 +609,14 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
             <div className="flex flex-col items-center w-16">
               <Button
                 onClick={heal}
-                disabled={healCooldown > 0 || currentTurn !== 'player' || gameOver || turnCount < 3 || !playerData}
+                disabled={healCooldown > 0 || currentTurn !== 'player' || gameOver || !playerData}
                 className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 mb-2"
               >
                 <Heart className="w-8 h-8 text-white" />
                 <span className="sr-only">Heal</span>
               </Button>
               <span className="text-xs text-white font-medium text-center w-full">
-                {turnCount < 3 ? `Heal (${3 - turnCount})` : 
-                 healCooldown > 0 ? `Heal (${healCooldown})` : 'Heal'}
+                {healCooldown > 0 ? `Heal (${healCooldown})` : 'Heal'}
               </span>
             </div>
           </div>
