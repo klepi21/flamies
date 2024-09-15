@@ -9,9 +9,9 @@ import App from './index';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Template dApp Next.js',
+  title: 'QuantumXFlamies - The Game',
   description:
-    'A basic implementation of MultiversX dApp providing the basics for MultiversX authentication and TX signing.',
+    'QuantumXFlamies is a game built on MultiversX blockchain. It is a turn-based RPG game where players can battle against OTHER Flamies.',
   viewport: {
     width: 'device-width',
     initialScale: 1

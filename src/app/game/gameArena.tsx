@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
@@ -170,8 +168,8 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         }, {});
 
         const processedData: EnemyData = {
-          identifier: data.identifier || enemyIdentifier, // Use the enemyIdentifier if data.identifier is not available
-          image_url: data.image_url || "https://via.placeholder.com/140", // Use a placeholder if image_url is not available
+          identifier: data.identifier || enemyIdentifier,
+          image_url: data.image_url || "https://via.placeholder.com/140",
           attributes: attributes
         };
 
@@ -296,33 +294,22 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
     defenderMaxHP: number,
     isCritical: boolean = false
   ) => {
-    // Base damage percentage (e.g., 10% of max HP)
     const baseDamagePercentage = 0.10;
-    
-    // Calculate base damage as a percentage of defender's max HP
     let baseDamage = defenderMaxHP * baseDamagePercentage;
-    
-    // Apply attacker's attack and defender's defence
     baseDamage = baseDamage * (attackerAttack / defenderDefence);
-    
-    // Apply a random factor for variability (0.9 to 1.1)
     const randomFactor = Math.random() * 0.2 + 0.9;
     let damage = Math.floor(baseDamage * randomFactor);
-    
-    // Apply critical hit
     if (isCritical) {
-      damage = Math.floor(damage * 1.5); // 50% extra damage for critical hits
+      damage = Math.floor(damage * 1.5);
     }
-    
-    // Ensure minimum damage of 1
     return Math.max(1, damage);
   }, [])
 
   const calculateDodgeChance = useCallback((attackerSpeed: number, defenderSpeed: number) => {
     const speedDifference = defenderSpeed - attackerSpeed;
-    const baseDodgeChance = 0.05; // 5% base dodge chance
-    const dodgeChance = Math.min(baseDodgeChance + (speedDifference / 200), 0.25); // Max 25% dodge chance
-    return Math.max(dodgeChance, 0); // Ensure dodge chance is not negative
+    const baseDodgeChance = 0.05;
+    const dodgeChance = Math.min(baseDodgeChance + (speedDifference / 200), 0.25);
+    return Math.max(dodgeChance, 0);
   }, [])
 
   const attack = useCallback((isPlayer: boolean, attackType: { name: string }) => {
@@ -345,11 +332,11 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         setLastDamageReceived(0);
       }
     } else {
-      const isCritical = Math.random() < 0.1; // 10% chance for a critical hit
+      const isCritical = Math.random() < 0.1;
       const damage = calculateDamage(
         attacker.attributes.Attack, 
         defender.attributes.Defence, 
-        defender.attributes.HP, // Pass the defender's max HP
+        defender.attributes.HP,
         isCritical
       );
 
@@ -443,7 +430,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         setHealCooldown((prev) => prev - 1);
       }
     }
-  }, [currentTurn, healCooldown]);
+  }, [currentTurn]);
 
   if (!playerData || !enemyData) {
     return <div>Loading...</div>
@@ -605,7 +592,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
             <div className="flex flex-col items-center w-12 sm:w-16">
               <Button
                 onClick={heal}
-                disabled={currentTurn !== 'player' || gameOver || !playerData || healCooldown > 0 || turnCount < 3}
+                disabled={currentTurn !== 'player' || gameOver || healCooldown > 0 || turnCount < 3}
                 className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 mb-1 sm:mb-2"
               >
                 <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
@@ -647,12 +634,6 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
             <p>Total Damage Received: {totalDamageReceived}</p>
             <p>Accuracy: {((totalDamageDealt / (totalDamageDealt + totalDamageReceived)) * 100).toFixed(2)}%</p>
             <p>Turns: {battleLog.length}</p>
-            <div className="mt-2 max-h-40 overflow-y-auto">
-              <p className="font-bold">Battle Log:</p>
-              {battleLog.map((log, index) => (
-                <p key={index} className="text-sm">{log}</p>
-              ))}
-            </div>
             <Button onClick={() => setShowAlert(false)} className="mt-4">
               Close
             </Button>
