@@ -248,8 +248,8 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
   const playerAttackTypes = useMemo(() => {
     if (playerData) {
       return [
-        getAttackType(playerData.attributes["Super Power#1"]),
-        getAttackType(playerData.attributes["Super Power#2"])
+        getAttackType(String(playerData.attributes["Super Power#1"])),
+        getAttackType(String(playerData.attributes["Super Power#2"]))
       ]
     }
     return []
@@ -320,7 +320,10 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
 
     if (!attacker || !defender) return;
 
-    const dodgeChance = calculateDodgeChance(attacker.attributes.Speed, defender.attributes.Speed);
+    const dodgeChance = calculateDodgeChance(
+      Number(attacker.attributes.Speed),
+      Number(defender.attributes.Speed)
+    );
     const isDodged = Math.random() < dodgeChance;
 
     if (isDodged) {
@@ -334,9 +337,9 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
     } else {
       const isCritical = Math.random() < 0.1;
       const damage = calculateDamage(
-        attacker.attributes.Attack, 
-        defender.attributes.Defence, 
-        defender.attributes.HP,
+        Number(attacker.attributes.Attack),
+        Number(defender.attributes.Defence),
+        Number(defender.attributes.HP),
         isCritical
       );
 
@@ -518,7 +521,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
                 <div className="h-3 w-full bg-gray-300 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-green-500 transition-all duration-300 ease-out"
-                    style={{ width: `${(playerHealth / playerData.attributes.HP) * 100}%` }}
+                    style={{ width: `${(Number(playerHealth) / Number(playerData.attributes.HP)) * 100}%` }}
                   />
                 </div>
                 <p className="text-xs mt-1 text-black">{playerHealth}/{playerData.attributes.HP} HP</p>
