@@ -22,7 +22,7 @@ export default function Home({
   return (
     <AuthRedirectWrapper requireAuth={false}>
       <PageWrapper>
-        <div className='flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white'>
+        <div className='flex flex-col items-center justify-center min-h-screen bg-transparent text-white'>
           <motion.div
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
