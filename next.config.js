@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  distDir: 'build',
+  // distDir: 'build',
   transpilePackages: ['@multiversx/sdk-dapp'],
   images: {
 
