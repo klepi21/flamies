@@ -98,8 +98,8 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
   const [enemyData, setEnemyData] = useState<EnemyData | null>(null)
   const [currentTurn, setCurrentTurn] = useState<'player' | 'enemy' | null>(null);
-  const [healCooldown, setHealCooldown] = useState(0); // Start with 0 turn cooldown
-  const [turnCount, setTurnCount] = useState(0); // Track the number of turns
+  const [healCooldown, setHealCooldown] = useState(3);
+  const [turnCount, setTurnCount] = useState(0);
 
   const fetchPlayerData = async (retryCount = 0) => {
     try {
@@ -425,26 +425,22 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
     setBattleLog((prev) => [...prev, playerWon ? "You won the battle!" : "You lost the battle!"])
   }
 
-  const heal = useCallback(() => {
-    if (healCooldown > 0 || currentTurn !== 'player' || gameOver || !playerData) return;
-
-    const baseHeal = 10;
-    const healAmount = Math.floor(baseHeal + (playerData.attributes.Defence * 0.5));
-    const newHealth = Math.min(playerHealth + healAmount, playerData.attributes.HP);
-
-    setPlayerHealth(newHealth);
-    setHealCooldown(3); // Set cooldown to 3 turns after use
-    setBattleLog((prev) => [...prev, `${playerData.identifier} healed ${healAmount}`]);
-
-    // Switch turn to enemy
-    setCurrentTurn('enemy');
-  }, [playerHealth, playerData, healCooldown, currentTurn, gameOver]);
+  const heal = () => {
+    if (playerData && currentTurn === 'player' && !gameOver && healCooldown === 0 && turnCount >= 3) {
+      const healAmount = Math.floor(playerData.attributes.HP * 0.3);
+      const newHealth = Math.min(playerHealth + healAmount, playerData.attributes.HP);
+      setPlayerHealth(newHealth);
+      setHealCooldown(3);
+      setBattleLog((prev) => [...prev, `${playerData.identifier} healed for ${healAmount}`]);
+      setCurrentTurn('enemy');
+    }
+  };
 
   useEffect(() => {
     if (currentTurn === 'player') {
-      setTurnCount(prev => prev + 1);
+      setTurnCount((prev) => prev + 1);
       if (healCooldown > 0) {
-        setHealCooldown(prev => prev - 1);
+        setHealCooldown((prev) => prev - 1);
       }
     }
   }, [currentTurn, healCooldown]);
@@ -609,14 +605,14 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
             <div className="flex flex-col items-center w-12 sm:w-16">
               <Button
                 onClick={heal}
-                disabled={healCooldown > 0 || currentTurn !== 'player' || gameOver || !playerData}
+                disabled={currentTurn !== 'player' || gameOver || !playerData || healCooldown > 0 || turnCount < 3}
                 className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 mb-1 sm:mb-2"
               >
                 <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 <span className="sr-only">Heal</span>
               </Button>
               <span className="text-[10px] sm:text-xs text-white font-medium text-center w-full">
-                {healCooldown > 0 ? `Heal (${healCooldown})` : 'Heal'}
+                {turnCount < 3 ? 'Heal (Locked)' : healCooldown > 0 ? `Heal (${healCooldown})` : 'Heal'}
               </span>
             </div>
           </div>
