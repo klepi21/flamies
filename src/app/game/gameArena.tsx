@@ -584,38 +584,38 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         {/* GameBoy controls */}
         <div className="flex justify-between items-center mt-4 relative z-20">
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 bg-red-950 rounded-full flex items-center justify-center">
-              <div className="w-20 h-20 bg-red-900 rounded-full flex items-center justify-center">
-                <div className="w-16 h-16 bg-red-800 rounded-full flex items-center justify-center text-white font-bold text-3xl">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-red-950 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-900 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-800 rounded-full flex items-center justify-center text-white font-bold text-2xl sm:text-3xl">
                   ✛
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex space-x-4">
+          <div className="flex space-x-2 sm:space-x-4">
             {playerAttackTypes.map((attack) => (
-              <div key={attack.name} className="flex flex-col items-center w-16">
+              <div key={attack.name} className="flex flex-col items-center w-12 sm:w-16">
                 <Button
                   onClick={() => playerAttack(attack)}
                   disabled={currentTurn !== 'player' || gameOver}
-                  className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 mb-2"
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 mb-1 sm:mb-2"
                 >
-                  <attack.icon className="w-8 h-8 text-white" />
+                  <attack.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   <span className="sr-only">{attack.name} attack</span>
                 </Button>
-                <span className="text-xs text-white font-medium text-center w-full">{attack.name}</span>
+                <span className="text-[10px] sm:text-xs text-white font-medium text-center w-full">{attack.name}</span>
               </div>
             ))}
-            <div className="flex flex-col items-center w-16">
+            <div className="flex flex-col items-center w-12 sm:w-16">
               <Button
                 onClick={heal}
                 disabled={healCooldown > 0 || currentTurn !== 'player' || gameOver || !playerData}
-                className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 mb-2"
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 mb-1 sm:mb-2"
               >
-                <Heart className="w-8 h-8 text-white" />
+                <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 <span className="sr-only">Heal</span>
               </Button>
-              <span className="text-xs text-white font-medium text-center w-full">
+              <span className="text-[10px] sm:text-xs text-white font-medium text-center w-full">
                 {healCooldown > 0 ? `Heal (${healCooldown})` : 'Heal'}
               </span>
             </div>
