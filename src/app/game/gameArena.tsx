@@ -65,7 +65,7 @@ interface EnemyData {
 
 interface PlayerData {
   identifier: string;
-  attributes: Record<string, any>;
+  attributes: Record<string, string | number>;
   image_url: string;
 }
 
@@ -200,7 +200,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
   useEffect(() => {
     fetchPlayerData();
     fetchEnemyData();
-  }, [identifier, enemyIdentifier]);
+  }, [identifier, enemyIdentifier, fetchPlayerData, fetchEnemyData]);
 
   useEffect(() => {
     if (playerData && enemyData) {
@@ -414,8 +414,8 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
 
   const heal = () => {
     if (playerData && currentTurn === 'player' && !gameOver && healCooldown === 0 && turnCount >= 3) {
-      const healAmount = Math.floor(playerData.attributes.HP * 0.3);
-      const newHealth = Math.min(playerHealth + healAmount, playerData.attributes.HP);
+      const healAmount = Math.floor(Number(playerData.attributes.HP) * 0.3);
+      const newHealth = Math.min(playerHealth + healAmount, Number(playerData.attributes.HP));
       setPlayerHealth(newHealth);
       setHealCooldown(3);
       setBattleLog((prev) => [...prev, `${playerData.identifier} healed for ${healAmount}`]);
@@ -430,7 +430,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         setHealCooldown((prev) => prev - 1);
       }
     }
-  }, [currentTurn]);
+  }, [currentTurn, healCooldown]);
 
   if (!playerData || !enemyData) {
     return <div>Loading...</div>
