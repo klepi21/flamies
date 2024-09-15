@@ -622,6 +622,20 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
           </div>
         </div>
 
+        {/* Start and Select buttons */}
+        <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex space-x-4 z-20">
+          <Button
+            className="w-16 h-8 bg-red-800 hover:bg-red-700 text-white text-xs font-bold rounded-full transform rotate-[-20deg] focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
+          >
+            SELECT
+          </Button>
+          <Button
+            className="w-16 h-8 bg-red-800 hover:bg-red-700 text-white text-xs font-bold rounded-full transform rotate-[-20deg] focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
+          >
+            START
+          </Button>
+        </div>
+
         {/* QuantumX Network branding */}
         <div className="absolute bottom-4 left-0 right-0 text-center z-10">
           <p className="text-white text-lg font-bold tracking-wide">QuantumX Network</p>
