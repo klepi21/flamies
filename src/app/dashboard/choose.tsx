@@ -82,8 +82,10 @@ export default function CharacterSelection() {
   useEffect(() => {
     const fetchNFTs = async () => {
       const address = 'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv'
-      const response = await fetch(`https://api.multiversx.com/accounts/${address}/nfts?collection=QXFLM-06e81a`)
+      const response = await fetch(`https://multiversx-api.beaconx.app/public-mainnet-api/accounts/${address}/nfts?collection=QXFLM-06e81a`)
       const data = await response.json()
+
+      console.log('Fetched NFT data:', data) // Add this line
 
       const nftsWithImages = await Promise.all(data.map(async (nft: NFT) => {
         const identifier = nft.identifier
@@ -101,7 +103,10 @@ export default function CharacterSelection() {
         }
       }))
 
-      setCharacters(nftsWithImages.filter((nft): nft is NFT => nft !== null))
+      const filteredNFTs = nftsWithImages.filter((nft): nft is NFT => nft !== null)
+      console.log('Processed NFTs:', filteredNFTs) // Add this line
+
+      setCharacters(filteredNFTs)
       setLoading(false)
     }
 
@@ -166,6 +171,20 @@ export default function CharacterSelection() {
       </div>
     )
   }
+
+  if (characters.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
+        <p>No characters available.</p>
+        <p className="mt-4">Debug info:</p>
+        <pre className="mt-2 p-4 bg-gray-800 rounded">
+          {JSON.stringify({ charactersLength: characters.length, loading }, null, 2)}
+        </pre>
+      </div>
+    )
+  }
+
+  const currentCharacter = characters[currentIndex]
 
   return (
     <motion.div 
@@ -233,14 +252,16 @@ export default function CharacterSelection() {
               }}
               className="absolute inset-0"
             >
-              <Image
-                src={characters[currentIndex].imageUrl}
-                alt={characters[currentIndex].identifier}
-                layout="fill"
-                objectFit="contain"
-                className="drop-shadow-2xl scale-100 md:scale-125 lg:scale-150 transition-transform duration-300"
-                draggable="false"
-              />
+              {currentCharacter && (
+                <Image
+                  src={currentCharacter.imageUrl}
+                  alt={currentCharacter.identifier}
+                  layout="fill"
+                  objectFit="contain"
+                  className="drop-shadow-2xl scale-100 md:scale-125 lg:scale-150 transition-transform duration-300"
+                  draggable="false"
+                />
+              )}
             </motion.div>
           </AnimatePresence>
           <motion.div 
@@ -271,7 +292,7 @@ export default function CharacterSelection() {
         >
           <h2 className="text-2xl font-bold mb-4 text-center">Character Attributes</h2>
           <div className="grid grid-cols-2 gap-4">
-            {characters[currentIndex].attributes.map((attr, index) => (
+            {currentCharacter.attributes.map((attr, index) => (
               <motion.div 
                 key={index}
                 initial={{ scale: 0, opacity: 0 }}
