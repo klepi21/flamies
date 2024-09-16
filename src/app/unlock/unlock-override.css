@@ -1,0 +1,15 @@
+/* styles/unlock-override.css */
+
+#unlockPage button {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  #unlockPage button:hover {
+    opacity: 0.9 !important;
+  }
+  
+  #unlockPage .wallet-login-button {
+    background-color: transparent !important;
+    padding: 0 !important;
+  }

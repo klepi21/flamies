@@ -16,8 +16,8 @@ export const Footer = () => {
           className='flex items-center text-sm hover:underline'
           href='https://multiversx.com/'
         >
-          Made with <Image src={heartIcon} alt='love' className='mx-1' /> by the
-          MultiversX team
+          Made with <Image src={heartIcon} alt='love' className='mx-1' /> by
+          QuantumX Network team
         </a>
       </div>
     </footer>

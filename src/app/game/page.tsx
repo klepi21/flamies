@@ -7,6 +7,7 @@ import { AuthRedirectWrapper } from '@/wrappers'
 import { ClientHooks } from '@/components/ClientHooks'
 import GameArena from './gameArena'
 import { db } from '@/firebase/config'
+import { useGetAccountInfo } from '@multiversx/sdk-dapp/hooks'
 
 const fetchRandomEnemyIdentifier = async (playerIdentifier: string) => {
   try {
@@ -29,15 +30,25 @@ const fetchRandomEnemyIdentifier = async (playerIdentifier: string) => {
   }
 };
 
+const allowedAddresses = [
+  'erd1qqqqqqqqqqqqqpgqp699jngundfqw07d8jzkepucvpzush6k3wvqyc44rx',
+  'erd1spyavw0956vq68xj8y4tenjpq2wd5a9p2c6j8gsz7ztyrnpxrruqzu66jx',
+  'erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl',
+  // Add more addresses as needed
+];
+
 export default function Game() {
   const searchParams = useSearchParams()
   const identifier = searchParams.get('identifier')
   const [enemyIdentifier, setEnemyIdentifier] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { address } = useGetAccountInfo()
+
+  const isAddressAllowed = allowedAddresses.includes(address)
 
   useEffect(() => {
     const fetchEnemy = async () => {
-      if (identifier) {
+      if (identifier && isAddressAllowed) {
         setIsLoading(true)
         const enemyId = await fetchRandomEnemyIdentifier(identifier)
         setEnemyIdentifier(enemyId)
@@ -46,14 +57,16 @@ export default function Game() {
     }
 
     fetchEnemy()
-  }, [identifier])
+  }, [identifier, isAddressAllowed])
 
   return (
     <>
       <ClientHooks />
       <AuthRedirectWrapper>
         <div className='flex flex-col max-w-3xl w-full'>
-          {isLoading ? (
+          {!isAddressAllowed ? (
+            <p className="text-center text-red-500">Sorry, your address is not on the beta list.</p>
+          ) : isLoading ? (
             <p>Loading...</p>
           ) : identifier && enemyIdentifier ? (
             <GameArena identifier={identifier} enemyIdentifier={enemyIdentifier} />

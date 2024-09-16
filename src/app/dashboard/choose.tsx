@@ -6,10 +6,12 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Loader2, Heart, Zap, Wind, Shield, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { getStorage, ref, getDownloadURL } from 'firebase/storage'
+import { ref, getDownloadURL } from 'firebase/storage'
 import { initializeApp } from 'firebase/app'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
+import { getStorage } from 'firebase/storage'
 import { motion, AnimatePresence, useAnimation, PanInfo } from 'framer-motion'
+import { useGetAccountInfo } from '@/hooks';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCIqpE3Z6C_2td5b1hGgQLyEDIIf8RySHw",
@@ -75,39 +77,75 @@ export default function CharacterSelection() {
   const [loading, setLoading] = useState(true)
   const [direction, setDirection] = useState(0)
   const [fireworks, setFireworks] = useState<{ x: number; y: number }[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [firebaseErrors] = useState<string[]>([]);
   const router = useRouter()
   const controls = useAnimation()
   const constraintsRef = useRef<HTMLDivElement>(null)
+  const [isAllowedAddress, setIsAllowedAddress] = useState(false);
+  const { address } = useGetAccountInfo();
+
+  const allowedAddresses = [
+    'erd1qqqqqqqqqqqqqpgqp699jngundfqw07d8jzkepucvpzush6k3wvqyc44rx',
+    'erd1spyavw0956vq68xj8y4tenjpq2wd5a9p2c6j8gsz7ztyrnpxrruqzu66jx',
+    'erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl',
+    // Add more addresses as needed
+  ];
+
+  useEffect(() => {
+    // Check if the connected address is in the allowed list
+    setIsAllowedAddress(allowedAddresses.includes(address));
+  }, [address]);
 
   useEffect(() => {
     const fetchNFTs = async () => {
-      const address = 'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv'
-      const response = await fetch(`https://multiversx-api.beaconx.app/public-mainnet-api/accounts/${address}/nfts?collection=QXFLM-06e81a`)
-      const data = await response.json()
-
-      console.log('Fetched NFT data:', data) // Add this line
-
-      const nftsWithImages = await Promise.all(data.map(async (nft: NFT) => {
-        const identifier = nft.identifier
-        const imageName = `${identifier}.png`
-        const imageRef = ref(storage, `flamies/${imageName}`)
-        try {
-          const imageUrl = await getDownloadURL(imageRef)
-          const docRef = doc(db, "flamies", identifier)
-          const docSnap = await getDoc(docRef)
-          const attributes = docSnap.exists() ? docSnap.data().attributes : []
-          return { identifier, imageUrl, attributes }
-        } catch (error) {
-          console.error(`Error fetching data for ${identifier}:`, error)
-          return null
+      try {
+        const address = 'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv'
+        const response = await fetch(`https://api.multiversx.com/accounts/${address}/nfts?collection=QXFLM-06e81a`)
+        
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
         }
-      }))
 
-      const filteredNFTs = nftsWithImages.filter((nft): nft is NFT => nft !== null)
-      console.log('Processed NFTs:', filteredNFTs) // Add this line
+        const data = await response.json()
+        console.log('Fetched NFT data:', data)
 
-      setCharacters(filteredNFTs)
-      setLoading(false)
+        if (data.length === 0) {
+          console.log('No NFTs returned from the API')
+          return
+        }
+
+        const nftsWithImages = await Promise.all(data.map(async (nft: NFT) => {
+          const identifier = nft.identifier
+          const imageName = `${identifier}.png`
+          const imageRef = ref(storage, `flamies/${imageName}`)
+          try {
+            console.log(`Processing NFT: ${identifier}`)
+            const imageUrl = await getDownloadURL(imageRef)
+            console.log(`Got image URL for ${identifier}`)
+
+            const docRef = doc(db, "flamies", identifier)
+            const docSnap = await getDoc(docRef)
+            console.log(`Got Firestore data for ${identifier}`)
+
+            const attributes = docSnap.exists() ? docSnap.data().attributes : []
+            return { identifier, imageUrl, attributes }
+          } catch (error) {
+            console.error(`Error processing NFT ${identifier}:`, error)
+            return null
+          }
+        }))
+
+        const filteredNFTs = nftsWithImages.filter((nft): nft is NFT => nft !== null)
+        console.log('Processed NFTs:', filteredNFTs)
+
+        setCharacters(filteredNFTs)
+      } catch (error) {
+        console.error('Error in fetchNFTs:', error)
+        setError(error instanceof Error ? error.message : 'An unknown error occurred')
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchNFTs()
@@ -172,13 +210,18 @@ export default function CharacterSelection() {
     )
   }
 
-  if (characters.length === 0) {
+  if (error || characters.length === 0 || firebaseErrors.length > 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-        <p>No characters available.</p>
+        <p>No characters available or errors occurred.</p>
         <p className="mt-4">Debug info:</p>
         <pre className="mt-2 p-4 bg-gray-800 rounded">
-          {JSON.stringify({ charactersLength: characters.length, loading }, null, 2)}
+          {JSON.stringify({ 
+            charactersLength: characters.length, 
+            loading, 
+            error, 
+            firebaseErrors 
+          }, null, 2)}
         </pre>
       </div>
     )
@@ -351,17 +394,31 @@ export default function CharacterSelection() {
         </motion.button>
       </motion.div>
 
-      <motion.button 
-        whileHover={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" }}
-        whileTap={{ scale: 0.95 }}
+      <motion.div 
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 1, type: "spring", stiffness: 120 }}
-        onClick={handlePlay}
-        className="px-12 py-6 text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl"
+        className="flex flex-col items-center"
       >
-        Play
-      </motion.button>
+        <motion.button 
+          whileHover={isAllowedAddress ? { scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" } : {}}
+          whileTap={isAllowedAddress ? { scale: 0.95 } : {}}
+          onClick={isAllowedAddress ? handlePlay : undefined}
+          className={`px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
+            isAllowedAddress 
+              ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
+              : "bg-gray-500 cursor-not-allowed"
+          }`}
+          disabled={!isAllowedAddress}
+        >
+          {isAllowedAddress ? "Play" : "Beta not available for you"}
+        </motion.button>
+        {!isAllowedAddress && (
+          <p className="mt-4 text-red-500">
+            Your address is not on the beta access list.
+          </p>
+        )}
+      </motion.div>
     </motion.div>
   )
 }
