@@ -100,8 +100,7 @@ export default function CharacterSelection() {
   useEffect(() => {
     const fetchNFTs = async () => {
       try {
-        const addresas = {address}
-        const response = await fetch(`https://api.multiversx.com/accounts/${addresas}/nfts?collection=QXFLM-06e81a`)
+        const response = await fetch(`https://api.multiversx.com/accounts/${address}/nfts?collection=QXFLM-06e81a`)
         
         if (!response.ok) {
           throw new Error(`API request failed with status ${response.status}`);
