@@ -86,7 +86,7 @@ export default function CharacterSelection() {
   const { address } = useGetAccountInfo();
 
   const allowedAddresses = [
-    'erd1qqqqqqqqqqqqqpgqp699jngundfqw07d8jzkepucvpzush6k3wvqyc44rx',
+    'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv',
     'erd1spyavw0956vq68xj8y4tenjpq2wd5a9p2c6j8gsz7ztyrnpxrruqzu66jx',
     'erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl',
     // Add more addresses as needed
@@ -100,8 +100,8 @@ export default function CharacterSelection() {
   useEffect(() => {
     const fetchNFTs = async () => {
       try {
-        const address = 'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv'
-        const response = await fetch(`https://api.multiversx.com/accounts/${address}/nfts?collection=QXFLM-06e81a`)
+        const addresas = {address}
+        const response = await fetch(`https://api.multiversx.com/accounts/${addresas}/nfts?collection=QXFLM-06e81a`)
         
         if (!response.ok) {
           throw new Error(`API request failed with status ${response.status}`);
