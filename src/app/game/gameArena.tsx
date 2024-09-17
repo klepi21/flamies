@@ -626,16 +626,16 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
       </div>
 
       {showAlert && (
-        <Alert className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 z-50">
-          <AlertTitle>{playerWon ? 'Victory!' : 'Defeat!'}</AlertTitle>
-          <AlertDescription>
+        <Alert className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 z-50 bg-gray-900 border-2 border-cyan-500 text-white">
+          <AlertTitle className="text-2xl font-bold text-cyan-400">{playerWon ? 'Victory!' : 'Defeat!'}</AlertTitle>
+          <AlertDescription className="text-gray-300">
             <p>{playerWon ? 'You won the battle!' : 'You lost the battle!'}</p>
-            <p>Total Damage Dealt: {totalDamageDealt}</p>
-            <p>Total Damage Received: {totalDamageReceived}</p>
-            <p>Accuracy: {((totalDamageDealt / (totalDamageDealt + totalDamageReceived)) * 100).toFixed(2)}%</p>
-            <p>Turns: {battleLog.length}</p>
+            <p>Total Damage Dealt: <span className="text-yellow-400">{totalDamageDealt}</span></p>
+            <p>Total Damage Received: <span className="text-red-400">{totalDamageReceived}</span></p>
+            <p>Accuracy: <span className="text-green-400">{((totalDamageDealt / (totalDamageDealt + totalDamageReceived)) * 100).toFixed(2)}%</span></p>
+            <p>Turns: <span className="text-cyan-400">{battleLog.length}</span></p>
             <div className="mt-2 max-h-40 overflow-y-auto">
-              <p className="font-bold">Battle Log:</p>
+              <p className="font-bold text-cyan-400">Battle Log:</p>
               {battleLog.map((log, index) => (
                 <p key={index} className="text-sm">
                   <span className="font-bold text-cyan-400">{log.attacker}</span>
@@ -647,7 +647,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
                 </p>
               ))}
             </div>
-            <Button onClick={() => setShowAlert(false)} className="mt-4">
+            <Button onClick={() => setShowAlert(false)} className="mt-4 bg-red-600 hover:bg-red-700 text-white">
               Close
             </Button>
           </AlertDescription>
