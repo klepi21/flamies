@@ -544,22 +544,11 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         </div>
         
         {/* Second screen (smaller) with integrated battle log and turn indicator */}
-        <div className="relative w-full h-[80px] bg-white overflow-hidden rounded-lg mb-4 border-2 border-red-800">
-          <div className="absolute inset-0">
-            <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ground1-I91WViPvBHLhiYnjEHd3fr66waAoso.webp"
-              alt="Second Screen Background"
-              layout="fill"
-              objectFit="cover"
-              className="max-w-[137%] h-auto"
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          </div>
-          <div className="absolute inset-0 bg-white bg-opacity-80 p-2 flex">
-            <div className="w-2/3 pr-2 border-r border-gray-300">
-              <div className="text-xs font-bold mb-1 text-black">Battle Log:</div>
-              <div className="h-[52px] overflow-y-auto text-xs text-black flex flex-col-reverse">
+        <div className="relative w-full h-[80px] bg-gray-900 overflow-hidden rounded-lg mb-4 border-2 border-red-800">
+          <div className="absolute inset-0 bg-opacity-80 p-2 flex">
+            <div className="w-2/3 pr-2 border-r border-gray-700">
+              <div className="text-xs font-bold mb-1 text-cyan-400">Battle Log:</div>
+              <div className="h-[52px] overflow-y-auto text-xs text-white flex flex-col-reverse">
                 {battleLog.slice(-4).reverse().map((log, index) => (
                   <p key={`log-${index}`} className="leading-tight">
                     <span className="font-bold text-cyan-400">{log.attacker}</span>
@@ -573,13 +562,13 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
               </div>
             </div>
             <div className="w-1/3 pl-2 flex flex-col justify-between">
-              <div className="text-xs text-black">
+              <div className="text-xs text-white">
                 <p>Last Atk: {lastAttackType || 'N/A'}</p>
                 <p>Dmg Dealt: {lastDamageDealt}</p>
                 <p>Dmg Recv: {lastDamageReceived}</p>
               </div>
               {!gameOver && (
-                <div className="text-center text-sm font-bold text-black">
+                <div className="text-center text-sm font-bold text-cyan-400">
                   {currentTurn === 'player' ? "Your Turn" : "Enemy's Turn"}
                 </div>
               )}
