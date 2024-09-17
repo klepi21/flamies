@@ -9,6 +9,8 @@ import { Button } from "../../ui/Button"
 import { Droplet, Cloud, Skull, Zap, Battery, Heart, Skull as SkullIcon, Infinity, Volume2, Brain } from 'lucide-react'
 import { initializeApp } from 'firebase/app'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/ui/Dialog"
+import { ScrollArea } from "@/ui/ScrollArea"
 
 // Initialize Firebase (replace with your config)
 const firebaseConfig = {
@@ -99,6 +101,8 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
   const [enemyData, setEnemyData] = useState<EnemyData | null>(null)
   const [currentTurn, setCurrentTurn] = useState<'player' | 'enemy' | null>(null);
   const [turnCount, setTurnCount] = useState(0);
+  const [isActionInProgress, setIsActionInProgress] = useState(false);
+  const [showBattleLog, setShowBattleLog] = useState(false);
 
   const fetchPlayerData = async (retryCount = 0) => {
     try {
@@ -325,7 +329,9 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
   }, [])
 
   const attack = useCallback((isPlayer: boolean, attackType: { name: string }) => {
-    if (gameOver) return;
+    if (gameOver || isActionInProgress) return;
+
+    setIsActionInProgress(true);
 
     const attacker = isPlayer ? playerData : enemyData;
     const defender = isPlayer ? enemyData : playerData;
@@ -397,17 +403,18 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
       if (!gameOver) {
         setCurrentTurn(isPlayer ? 'enemy' : 'player')
       }
+      setIsActionInProgress(false);
     }, 1000)
-  }, [gameOver, calculateDamage, createParticles, playerData, enemyData, calculateDodgeChance])
+  }, [gameOver, calculateDamage, createParticles, playerData, enemyData, calculateDodgeChance, isActionInProgress])
 
   const playerAttack = useCallback((attackType: { name: string }) => {
     console.log("Player attacking with:", attackType);
-    if (currentTurn !== 'player' || gameOver) return
+    if (currentTurn !== 'player' || gameOver || isActionInProgress) return
     attack(true, attackType)
-  }, [currentTurn, gameOver, attack])
+  }, [currentTurn, gameOver, attack, isActionInProgress])
 
   useEffect(() => {
-    if (currentTurn === 'enemy' && !gameOver) {
+    if (currentTurn === 'enemy' && !gameOver && !isActionInProgress) {
       const enemyAttackTimeout = setTimeout(() => {
         const enemyAttackType = enemyAttackTypes[Math.floor(Math.random() * enemyAttackTypes.length)]
         attack(false, enemyAttackType)
@@ -415,7 +422,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
 
       return () => clearTimeout(enemyAttackTimeout)
     }
-  }, [currentTurn, gameOver, attack, enemyAttackTypes])
+  }, [currentTurn, gameOver, attack, enemyAttackTypes, isActionInProgress])
 
   const endGame = (playerWon: boolean) => {
     setGameOver(true)
@@ -429,6 +436,10 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
       setTurnCount((prev) => prev + 1);
     }
   }, [currentTurn]);
+
+  const toggleBattleLog = useCallback(() => {
+    setShowBattleLog(prev => !prev);
+  }, []);
 
   if (!playerData || !enemyData) {
     return <div>Loading...</div>
@@ -578,7 +589,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
               <div key={attack.name} className="flex flex-col items-center w-12 sm:w-16">
                 <Button
                   onClick={() => playerAttack(attack)}
-                  disabled={currentTurn !== 'player' || gameOver}
+                  disabled={currentTurn !== 'player' || gameOver || isActionInProgress}
                   className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 mb-1 sm:mb-2"
                 >
                   <attack.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
@@ -598,6 +609,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
             SELECT
           </Button>
           <Button
+            onClick={toggleBattleLog}
             className="w-16 h-8 bg-red-800 hover:bg-red-700 text-white text-xs font-bold rounded-full transform rotate-[-20deg] focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
           >
             START
@@ -631,6 +643,23 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
           </AlertDescription>
         </Alert>
       )}
+      
+      {/* Battle Log Modal */}
+      <Dialog open={showBattleLog} onOpenChange={setShowBattleLog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Battle Log</DialogTitle>
+            <DialogDescription>
+              Full history of the battle
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[50vh] w-full pr-4">
+            {battleLog.map((log, index) => (
+              <p key={index} className="text-sm mb-2">{log}</p>
+            ))}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
       
       <style jsx global>{`
         @keyframes attack-right {
