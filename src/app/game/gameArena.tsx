@@ -11,6 +11,7 @@ import { initializeApp } from 'firebase/app'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/ui/Dialog"
 import { ScrollArea } from "@/ui/ScrollArea"
+import { X } from 'lucide-react'
 
 // Initialize Firebase (replace with your config)
 const firebaseConfig = {
@@ -79,6 +80,12 @@ interface Particle {
   emoji: string;
 }
 
+interface BattleLogEntry {
+  attacker: string;
+  attack: string;
+  damage: number;
+}
+
 export default function GameArena({ identifier, enemyIdentifier }: GameArenaProps) {
   const [playerHealth, setPlayerHealth] = useState(0)
   const [enemyHealth, setEnemyHealth] = useState(0)
@@ -96,7 +103,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
   const [gameOver, setGameOver] = useState(false)
   const [playerWon, setPlayerWon] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
-  const [battleLog, setBattleLog] = useState<string[]>([]);
+  const [battleLog, setBattleLog] = useState<BattleLogEntry[]>([]);
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
   const [enemyData, setEnemyData] = useState<EnemyData | null>(null)
   const [currentTurn, setCurrentTurn] = useState<'player' | 'enemy' | null>(null);
@@ -343,7 +350,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
 
     if (isDodged) {
       const message = `${defender.identifier} dodged!`;
-      setBattleLog((prev) => [...prev, message]);
+      setBattleLog((prev) => [...prev, { attacker: defender.identifier, attack: 'Dodge', damage: 0 }]);
       if (isPlayer) {
         setLastDamageDealt(0);
       } else {
@@ -359,7 +366,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
       );
 
       const message = `${attacker.identifier} ${attackType.name}: ${damage}${isCritical ? '!' : ''}`;
-      setBattleLog((prev) => [...prev, message]);
+      setBattleLog((prev) => [...prev, { attacker: attacker.identifier, attack: attackType.name, damage }]);
 
       if (isPlayer) {
         setPlayerAttacking(true)
@@ -428,7 +435,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
     setGameOver(true)
     setPlayerWon(playerWon)
     setShowAlert(true)
-    setBattleLog((prev) => [...prev, playerWon ? "You won the battle!" : "You lost the battle!"])
+    setBattleLog((prev) => [...prev, { attacker: playerWon ? 'You' : 'Enemy', attack: playerWon ? 'Victory' : 'Defeat', damage: 0 }]);
   }
 
   useEffect(() => {
@@ -554,7 +561,14 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
               <div className="text-xs font-bold mb-1 text-black">Battle Log:</div>
               <div className="h-[52px] overflow-y-auto text-xs text-black flex flex-col-reverse">
                 {battleLog.slice(-4).reverse().map((log, index) => (
-                  <p key={`log-${index}`} className="leading-tight">{log}</p>
+                  <p key={`log-${index}`} className="leading-tight">
+                    <span className="font-bold text-cyan-400">{log.attacker}</span>
+                    <span className="text-gray-300"> used </span>
+                    <span className="font-bold text-yellow-400">{log.attack}</span>
+                    <span className="text-gray-300"> for </span>
+                    <span className="font-bold text-red-400">{log.damage}</span>
+                    <span className="text-gray-300"> damage</span>
+                  </p>
                 ))}
               </div>
             </div>
@@ -634,7 +648,14 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
             <div className="mt-2 max-h-40 overflow-y-auto">
               <p className="font-bold">Battle Log:</p>
               {battleLog.map((log, index) => (
-                <p key={index} className="text-sm">{log}</p>
+                <p key={index} className="text-sm">
+                  <span className="font-bold text-cyan-400">{log.attacker}</span>
+                  <span className="text-gray-300"> used </span>
+                  <span className="font-bold text-yellow-400">{log.attack}</span>
+                  <span className="text-gray-300"> for </span>
+                  <span className="font-bold text-red-400">{log.damage}</span>
+                  <span className="text-gray-300"> damage</span>
+                </p>
               ))}
             </div>
             <Button onClick={() => setShowAlert(false)} className="mt-4">
@@ -644,20 +665,36 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         </Alert>
       )}
       
-      {/* Battle Log Modal */}
+      {/* Battle Log Dialog */}
       <Dialog open={showBattleLog} onOpenChange={setShowBattleLog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Battle Log</DialogTitle>
-            <DialogDescription>
-              Full history of the battle
-            </DialogDescription>
+        <DialogContent className="sm:max-w-[425px] bg-gray-900 border-2 border-cyan-500 text-white p-0 overflow-hidden">
+          <DialogHeader className="bg-gradient-to-r from-red-900 to-red-950 p-4 relative">
+            <DialogTitle className="text-2xl font-bold text-cyan-400">Battle Log</DialogTitle>
+            <button
+              onClick={() => setShowBattleLog(false)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <X size={24} />
+            </button>
           </DialogHeader>
-          <ScrollArea className="h-[50vh] w-full pr-4">
-            {battleLog.map((log, index) => (
-              <p key={index} className="text-sm mb-2">{log}</p>
-            ))}
-          </ScrollArea>
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-2 text-cyan-300">Full history of the battle</h3>
+            <ScrollArea className="h-[50vh] w-full pr-4">
+              {battleLog.map((entry, index) => (
+                <div key={index} className="mb-3 p-2 bg-gray-800 rounded-lg border border-cyan-700">
+                  <p className="text-sm">
+                    <span className="font-bold text-cyan-400">{entry.attacker}</span>
+                    <span className="text-gray-300"> used </span>
+                    <span className="font-bold text-yellow-400">{entry.attack}</span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-gray-300">Damage dealt: </span>
+                    <span className="font-bold text-red-400">{entry.damage}</span>
+                  </p>
+                </div>
+              ))}
+            </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
       
