@@ -379,14 +379,25 @@ export default function CharacterSelection() {
               </table>
             </div>
           </div>
-          <motion.button 
-            whileHover={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => router.push(`/game?identifier=${playerData?.ChoosedNFT}`)}
-            className="mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer"
-          >
-            Play
-          </motion.button>
+          {!(playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) && (
+            <motion.button 
+              whileHover={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" } : {}}
+              whileTap={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 0.95 } : {}}
+              onClick={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? handlePlay : undefined}
+              className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
+                isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
+                  ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
+                  : "bg-gray-500 cursor-not-allowed"
+              }`}
+            >
+              Play
+            </motion.button>
+          )}
+          {playerData?.gamesPlayedToday === 3 && (
+            <p className="mt-4 text-red-500">
+              You cannot play another game today. You have reached the limit of 3 games.
+            </p>
+          )}
         </div>
       ) : (
         <>
@@ -551,19 +562,25 @@ export default function CharacterSelection() {
               </p>
             )}
 
-            <motion.button 
-              whileHover={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" } : {}}
-              whileTap={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 0.95 } : {}}
-              onClick={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? handlePlay : undefined}
-              className={`px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
-                isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
-                  ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
-                  : "bg-gray-500 cursor-not-allowed"
-              }`}
-              disabled={!isAllowedAddress || playerData?.gamesPlayedToday === undefined || playerData?.gamesPlayedToday >= 3}
-            >
-              {isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? "Play" : "Limit reached"}
-            </motion.button>
+            {!(playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) && (
+              <motion.button 
+                whileHover={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" } : {}}
+                whileTap={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 0.95 } : {}}
+                onClick={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? handlePlay : undefined}
+                className={`px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
+                  isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
+                    ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
+                    : "bg-gray-500 cursor-not-allowed"
+                }`}
+              >
+                Play
+              </motion.button>
+            )}
+            {playerData?.gamesPlayedToday === 3 && (
+              <p className="mt-4 text-red-500">
+                You cannot play another game today. You have reached the limit of 3 games.
+              </p>
+            )}
             {!isAllowedAddress && (
               <p className="mt-4 text-red-500">
                 Your address is not on the beta access list.
