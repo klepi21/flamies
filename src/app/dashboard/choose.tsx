@@ -230,27 +230,26 @@ export default function CharacterSelection() {
   }
 
   const handlePlay = async () => {
-    if (characters.length > 0) {
-      const now = Date.now();
-      const lastChosenTimeStamp = playerData?.lastChoosenTimeStamp?.toMillis() || 0;
-      const threeDaysInMillis = 3 * 24 * 60 * 60 * 1000;
+    console.log('Play button clicked');
+    console.log('Current games played today:', playerData?.gamesPlayedToday);
 
-      if (now - lastChosenTimeStamp < threeDaysInMillis) {
-        setCanChooseNFT(false);
-        return;
-      }
+    if (characters.length > 0) {
+      console.log('Characters available:', characters.length);
 
       // Check if games played today is 3
       if (playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) {
-        setCanChooseNFT(false);
-        return;
+        console.log('Games played today limit reached.');
+        setCanChooseNFT(false); // Optionally set this if you want to indicate they can't choose a new character
+        return; // This will prevent the redirect
       }
 
+      console.log('Updating gamesPlayedToday in the database...');
       // Update gamesPlayedToday in the database
       await updateDoc(doc(db, "players", address), {
         gamesPlayedToday: (playerData?.gamesPlayedToday || 0) + 1, // Increment games played
       });
 
+      console.log('Fetching updated player data...');
       // Fetch updated player data after incrementing
       const playerRef = doc(db, "players", address);
       const playerSnap = await getDoc(playerRef);
@@ -259,7 +258,12 @@ export default function CharacterSelection() {
         setPlayerData(updatedPlayerData); // Update state with new data
       }
 
-      setShowConfirmationDialog(true);
+      // Redirect to the game
+      const selectedCharacter = characters[currentIndex];
+      console.log('Redirecting to game with identifier:', selectedCharacter.identifier); // Log the identifier
+      router.push(`/game?identifier=${selectedCharacter.identifier}`);
+    } else {
+      console.log('No characters available to play.');
     }
   }
 
@@ -297,19 +301,23 @@ export default function CharacterSelection() {
     )
   }
 
-  if (error || characters.length === 0 || firebaseErrors.length > 0) {
+  // Check if the user has no NFTs
+  if (error || firebaseErrors.length > 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
         <p>No characters available or errors occurred.</p>
-        <p className="mt-4">Debug info:</p>
-        <pre className="mt-2 p-4 bg-gray-800 rounded">
-          {JSON.stringify({ 
-            charactersLength: characters.length, 
-            loading, 
-            error, 
-            firebaseErrors 
-          }, null, 2)}
-        </pre>
+      </div>
+    )
+  }
+
+  // New condition to check if the user has no NFTs
+  if (characters.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
+        <p>To play this game you need to hold at least one QuantumXFlamie.</p>
+        <a href="https://xoxno.com/collection/QXFLM-06e81a" className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
+          Get one Now
+        </a>
       </div>
     )
   }
@@ -383,7 +391,7 @@ export default function CharacterSelection() {
             <motion.button 
               whileHover={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" } : {}}
               whileTap={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 0.95 } : {}}
-              onClick={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? handlePlay : undefined}
+              onClick={handlePlay} // Ensure this is set to handlePlay directly
               className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
                 isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
                   ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
@@ -566,7 +574,7 @@ export default function CharacterSelection() {
               <motion.button 
                 whileHover={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" } : {}}
                 whileTap={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 0.95 } : {}}
-                onClick={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? handlePlay : undefined}
+                onClick={handlePlay} // Ensure this is set to handlePlay directly
                 className={`px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
                   isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
                     ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
