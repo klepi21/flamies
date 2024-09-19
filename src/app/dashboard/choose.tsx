@@ -251,6 +251,14 @@ export default function CharacterSelection() {
         gamesPlayedToday: (playerData?.gamesPlayedToday || 0) + 1, // Increment games played
       });
 
+      // Fetch updated player data after incrementing
+      const playerRef = doc(db, "players", address);
+      const playerSnap = await getDoc(playerRef);
+      if (playerSnap.exists()) {
+        const updatedPlayerData: PlayerData = playerSnap.data() as PlayerData;
+        setPlayerData(updatedPlayerData); // Update state with new data
+      }
+
       setShowConfirmationDialog(true);
     }
   }
