@@ -70,15 +70,20 @@ const Firework = ({ x, y }: { x: number; y: number }) => {
 }
 
 // Update the PlayerData interface
+interface Attribute {
+  trait_type: string;
+  value: number | string;
+}
+
 interface PlayerData {
   ChoosedNFT: string;
-  lastChoosenTimeStamp: { toMillis: () => number; toDate: () => Date }; // Added toDate method
+  lastChoosenTimeStamp: { toMillis: () => number; toDate: () => Date };
   gamesPlayedToday: number;
-  attributes?: { trait_type: string; value: number | string }[];
+  attributes?: Attribute[];
 }
 
 export default function CharacterSelection() {
-  const [playerData, setPlayerData] = useState<PlayerData | null>(null); // Moved here
+  const [playerData, setPlayerData] = useState<PlayerData | null>(null);
 
   // Wrap allowedAddresses in useMemo
   const allowedAddresses = useMemo(() => [
@@ -106,7 +111,7 @@ export default function CharacterSelection() {
 
   useEffect(() => {
     setIsAllowedAddress(allowedAddresses.includes(address));
-  }, [address, allowedAddresses]); // Updated dependencies
+  }, [address, allowedAddresses]);
 
   useEffect(() => {
     const fetchPlayerData = async () => {
@@ -114,7 +119,7 @@ export default function CharacterSelection() {
         const playerRef = doc(db, "players", address);
         const playerSnap = await getDoc(playerRef);
         if (playerSnap.exists()) {
-          const playerData: PlayerData = playerSnap.data() as PlayerData; // Specify type here
+          const playerData: PlayerData = playerSnap.data() as PlayerData;
           setPlayerData(playerData);
           setHasChosenNFT(!!playerData.ChoosedNFT);
         } else {
@@ -124,7 +129,7 @@ export default function CharacterSelection() {
     };
 
     fetchPlayerData();
-  }, [address, allowedAddresses]); // Updated dependencies
+  }, [address, allowedAddresses]);
 
   useEffect(() => {
     const fetchImageUrl = async () => {
@@ -236,7 +241,7 @@ export default function CharacterSelection() {
       }
 
       // Check if games played today is 3
-      if (playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) { // Added check for undefined
+      if (playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) {
         setCanChooseNFT(false)
         return
       }
@@ -344,14 +349,14 @@ export default function CharacterSelection() {
                     <td className="py-2 pr-4 font-semibold">Games Played Today:</td>
                     <td className="py-2">{playerData?.gamesPlayedToday || 0}</td>
                   </tr>
-                  {playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3 && ( // Added check for undefined
+                  {playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3 && (
                     <tr className="border-b border-gray-700">
                       <td className="py-2 pr-4 font-semibold text-red-500" colSpan={2}>
                         You cannot play another game today. You have reached the limit of 3 games.
                       </td>
                     </tr>
                   )}
-                  {playerData?.attributes && playerData.attributes.map((attr: any, index: number) => (
+                  {playerData?.attributes && playerData.attributes.map((attr: Attribute, index: number) => (
                     <tr key={index} className="border-b border-gray-700">
                       <td className="py-2 pr-4 font-semibold">{attr.trait_type}:</td>
                       <td className="py-2">{attr.value}</td>
@@ -542,7 +547,7 @@ export default function CharacterSelection() {
                   ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
                   : "bg-gray-500 cursor-not-allowed"
               }`}
-              disabled={!isAllowedAddress || playerData?.gamesPlayedToday === undefined || playerData.gamesPlayedToday >= 3} // Updated condition
+              disabled={!isAllowedAddress || playerData?.gamesPlayedToday === undefined || playerData.gamesPlayedToday >= 3}
             >
               {isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? "Play" : "Limit reached"}
             </motion.button>
