@@ -231,22 +231,27 @@ export default function CharacterSelection() {
 
   const handlePlay = async () => {
     if (characters.length > 0) {
-      const now = Date.now()
-      const lastChosenTimeStamp = playerData?.lastChoosenTimeStamp?.toMillis() || 0
-      const threeDaysInMillis = 3 * 24 * 60 * 60 * 1000
+      const now = Date.now();
+      const lastChosenTimeStamp = playerData?.lastChoosenTimeStamp?.toMillis() || 0;
+      const threeDaysInMillis = 3 * 24 * 60 * 60 * 1000;
 
       if (now - lastChosenTimeStamp < threeDaysInMillis) {
-        setCanChooseNFT(false)
-        return
+        setCanChooseNFT(false);
+        return;
       }
 
       // Check if games played today is 3
       if (playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) {
-        setCanChooseNFT(false)
-        return
+        setCanChooseNFT(false);
+        return;
       }
 
-      setShowConfirmationDialog(true)
+      // Update gamesPlayedToday in the database
+      await updateDoc(doc(db, "players", address), {
+        gamesPlayedToday: (playerData?.gamesPlayedToday || 0) + 1, // Increment games played
+      });
+
+      setShowConfirmationDialog(true);
     }
   }
 
@@ -547,7 +552,7 @@ export default function CharacterSelection() {
                   ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
                   : "bg-gray-500 cursor-not-allowed"
               }`}
-              disabled={!isAllowedAddress || playerData?.gamesPlayedToday === undefined || playerData.gamesPlayedToday >= 3}
+              disabled={!isAllowedAddress || playerData?.gamesPlayedToday === undefined || playerData?.gamesPlayedToday >= 3}
             >
               {isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? "Play" : "Limit reached"}
             </motion.button>
