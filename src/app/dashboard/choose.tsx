@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Loader2, Heart, Zap, Wind, Shield, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -77,10 +77,16 @@ interface PlayerData {
   attributes?: { trait_type: string; value: number | string }[];
 }
 
-// Update the state type
-const [playerData, setPlayerData] = useState<PlayerData | null>(null);
-
 export default function CharacterSelection() {
+  const [playerData, setPlayerData] = useState<PlayerData | null>(null); // Moved here
+
+  // Wrap allowedAddresses in useMemo
+  const allowedAddresses = useMemo(() => [
+    'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv',
+    'erd1spyavw0956vq68xj8y4tenjpq2wd5a9p2c6j8gsz7ztyrnpxrruqzu66jx',
+    'erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl',
+  ], []);
+
   const [characters, setCharacters] = useState<NFT[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -98,33 +104,27 @@ export default function CharacterSelection() {
   const [hasChosenNFT, setHasChosenNFT] = useState(false)
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
 
-  const allowedAddresses = [
-    'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv',
-    'erd1spyavw0956vq68xj8y4tenjpq2wd5a9p2c6j8gsz7ztyrnpxrruqzu66jx',
-    'erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl',
-  ]
-
   useEffect(() => {
-    setIsAllowedAddress(allowedAddresses.includes(address))
-  }, [address])
+    setIsAllowedAddress(allowedAddresses.includes(address));
+  }, [address, allowedAddresses]); // Updated dependencies
 
   useEffect(() => {
     const fetchPlayerData = async () => {
       if (address) {
-        const playerRef = doc(db, "players", address)
-        const playerSnap = await getDoc(playerRef)
+        const playerRef = doc(db, "players", address);
+        const playerSnap = await getDoc(playerRef);
         if (playerSnap.exists()) {
           const playerData: PlayerData = playerSnap.data() as PlayerData; // Specify type here
-          setPlayerData(playerData)
-          setHasChosenNFT(!!playerData.ChoosedNFT)
+          setPlayerData(playerData);
+          setHasChosenNFT(!!playerData.ChoosedNFT);
         } else {
-          console.log("No player data found for this address.")
+          console.log("No player data found for this address.");
         }
       }
-    }
+    };
 
-    fetchPlayerData()
-  }, [address, allowedAddresses]) // Added allowedAddresses as a dependency
+    fetchPlayerData();
+  }, [address, allowedAddresses]); // Updated dependencies
 
   useEffect(() => {
     const fetchImageUrl = async () => {
