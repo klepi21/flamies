@@ -69,6 +69,17 @@ const Firework = ({ x, y }: { x: number; y: number }) => {
   )
 }
 
+// Update the PlayerData interface
+interface PlayerData {
+  ChoosedNFT: string;
+  lastChoosenTimeStamp: { toMillis: () => number; toDate: () => Date }; // Added toDate method
+  gamesPlayedToday: number;
+  attributes?: { trait_type: string; value: number | string }[];
+}
+
+// Update the state type
+const [playerData, setPlayerData] = useState<PlayerData | null>(null);
+
 export default function CharacterSelection() {
   const [characters, setCharacters] = useState<NFT[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -82,7 +93,6 @@ export default function CharacterSelection() {
   const constraintsRef = useRef<HTMLDivElement>(null)
   const [isAllowedAddress, setIsAllowedAddress] = useState(false)
   const { address } = useGetAccountInfo()
-  const [playerData, setPlayerData] = useState<any>(null)
   const [canChooseNFT, setCanChooseNFT] = useState(true)
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false)
   const [hasChosenNFT, setHasChosenNFT] = useState(false)
@@ -104,7 +114,7 @@ export default function CharacterSelection() {
         const playerRef = doc(db, "players", address)
         const playerSnap = await getDoc(playerRef)
         if (playerSnap.exists()) {
-          const playerData = playerSnap.data()
+          const playerData: PlayerData = playerSnap.data() as PlayerData; // Specify type here
           setPlayerData(playerData)
           setHasChosenNFT(!!playerData.ChoosedNFT)
         } else {
@@ -114,7 +124,7 @@ export default function CharacterSelection() {
     }
 
     fetchPlayerData()
-  }, [address])
+  }, [address, allowedAddresses]) // Added allowedAddresses as a dependency
 
   useEffect(() => {
     const fetchImageUrl = async () => {
@@ -216,8 +226,6 @@ export default function CharacterSelection() {
 
   const handlePlay = async () => {
     if (characters.length > 0) {
-      const selectedCharacter = characters[currentIndex]
-      
       const now = Date.now()
       const lastChosenTimeStamp = playerData?.lastChoosenTimeStamp?.toMillis() || 0
       const threeDaysInMillis = 3 * 24 * 60 * 60 * 1000
@@ -228,7 +236,7 @@ export default function CharacterSelection() {
       }
 
       // Check if games played today is 3
-      if (playerData.gamesPlayedToday >= 3) {
+      if (playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) { // Added check for undefined
         setCanChooseNFT(false)
         return
       }
@@ -313,7 +321,7 @@ export default function CharacterSelection() {
               {selectedImageUrl && (
                 <Image
                   src={selectedImageUrl}
-                  alt={playerData.ChoosedNFT}
+                  alt={playerData?.ChoosedNFT ?? 'N/A'}
                   layout="fill"
                   objectFit="contain"
                   className="rounded-lg shadow-lg"
@@ -326,24 +334,24 @@ export default function CharacterSelection() {
                 <tbody>
                   <tr className="border-b border-gray-700">
                     <td className="py-2 pr-4 font-semibold">NFT ID:</td>
-                    <td className="py-2">{playerData.ChoosedNFT}</td>
+                    <td className="py-2">{playerData?.ChoosedNFT ?? 'N/A'}</td>
                   </tr>
                   <tr className="border-b border-gray-700">
                     <td className="py-2 pr-4 font-semibold">Chosen Until:</td>
-                    <td className="py-2">{playerData.lastChoosenTimeStamp.toDate().toLocaleString()}</td>
+                    <td className="py-2">{playerData?.lastChoosenTimeStamp?.toDate().toLocaleString()}</td>
                   </tr>
                   <tr className="border-b border-gray-700">
                     <td className="py-2 pr-4 font-semibold">Games Played Today:</td>
-                    <td className="py-2">{playerData.gamesPlayedToday || 0}</td>
+                    <td className="py-2">{playerData?.gamesPlayedToday || 0}</td>
                   </tr>
-                  {playerData.gamesPlayedToday >= 3 && (
+                  {playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3 && ( // Added check for undefined
                     <tr className="border-b border-gray-700">
                       <td className="py-2 pr-4 font-semibold text-red-500" colSpan={2}>
                         You cannot play another game today. You have reached the limit of 3 games.
                       </td>
                     </tr>
                   )}
-                  {playerData.attributes && playerData.attributes.map((attr: any, index: number) => (
+                  {playerData?.attributes && playerData.attributes.map((attr: any, index: number) => (
                     <tr key={index} className="border-b border-gray-700">
                       <td className="py-2 pr-4 font-semibold">{attr.trait_type}:</td>
                       <td className="py-2">{attr.value}</td>
@@ -356,7 +364,7 @@ export default function CharacterSelection() {
           <motion.button 
             whileHover={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => router.push(`/game?identifier=${playerData.ChoosedNFT}`)}
+            onClick={() => router.push(`/game?identifier=${playerData?.ChoosedNFT}`)}
             className="mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer"
           >
             Play
@@ -526,17 +534,17 @@ export default function CharacterSelection() {
             )}
 
             <motion.button 
-              whileHover={isAllowedAddress && playerData.gamesPlayedToday < 3 ? { scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" } : {}}
-              whileTap={isAllowedAddress && playerData.gamesPlayedToday < 3 ? { scale: 0.95 } : {}}
-              onClick={isAllowedAddress && playerData.gamesPlayedToday < 3 ? handlePlay : undefined}
+              whileHover={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" } : {}}
+              whileTap={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 0.95 } : {}}
+              onClick={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? handlePlay : undefined}
               className={`px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
-                isAllowedAddress && playerData.gamesPlayedToday < 3 
+                isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
                   ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
                   : "bg-gray-500 cursor-not-allowed"
               }`}
-              disabled={!isAllowedAddress || playerData.gamesPlayedToday >= 3}
+              disabled={!isAllowedAddress || playerData?.gamesPlayedToday === undefined || playerData.gamesPlayedToday >= 3} // Updated condition
             >
-              {isAllowedAddress && playerData.gamesPlayedToday < 3 ? "Play" : "Limit reached"}
+              {isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? "Play" : "Limit reached"}
             </motion.button>
             {!isAllowedAddress && (
               <p className="mt-4 text-red-500">
