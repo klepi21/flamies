@@ -129,15 +129,15 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
 
     try {
       const updates: any = {
-        gamesPlayed: increment(1),
-        gamesPlayedToday: increment(1),
+        
       };
 
       if (outcome === 'win') {
         updates.wins = increment(1);
         updates.XP = increment(50);
+        updates.losses = increment(-1);
       } else {
-        updates.losses = increment(1);
+        
         updates.XP = increment(30);
       }
 
