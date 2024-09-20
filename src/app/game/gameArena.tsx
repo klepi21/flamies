@@ -566,7 +566,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
                 <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 ">
                     <Button
                         onClick={() => window.location.href = '/dashboard'}
-                        className="bg-red-800 hover:bg-white text-black font-bold py-2 px-4 rounded"
+                        className="bg-black hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
                     >
                         Return to Dashboard
                     </Button>
@@ -590,7 +590,8 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
           <div className="absolute inset-0 flex flex-col items-center justify-end p-4">
             <div className="w-full flex justify-between items-end mb-4">
               <div className="bg-white bg-opacity-80 rounded-lg p-2 w-40 z-10">
-                <h3 className="text-sm font-bold mb-1 text-black">{enemyData.identifier}</h3>
+              <h3 className="text-sm font-bold mb-1 text-black">{'Enemy'}</h3>
+               { /*} <h3 className="text-sm font-bold mb-1 text-black">{enemyData.identifier || 'Enemy'}</h3> */}
                 <div className="h-3 w-full bg-gray-300 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-red-500 transition-all duration-300 ease-out"
@@ -632,7 +633,8 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
                 ))}
               </div>
               <div className="bg-white bg-opacity-80 rounded-lg p-2 w-40 z-10">
-                <h3 className="text-sm font-bold mb-1 text-black">{playerData.identifier}</h3>
+              <h3 className="text-sm font-bold mb-1 text-black">{'You'}</h3>
+              {/* <h3 className="text-sm font-bold mb-1 text-black">{playerData.identifier || 'You'}</h3> */}
                 <div className="h-3 w-full bg-gray-300 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-green-500 transition-all duration-300 ease-out"
