@@ -11,7 +11,8 @@ const nextConfig = {
       'via.placeholder.com',
       'hebbkx1anhila5yf.public.blob.vercel-storage.com',
       'firebasestorage.googleapis.com',
-      'i.imgur.com'
+      'i.imgur.com',
+      'i.ibb.co',
     ],
 
 

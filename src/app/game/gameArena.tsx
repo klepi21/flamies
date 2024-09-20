@@ -578,11 +578,11 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         <div className="relative w-full h-[320px] bg-transparent overflow-hidden rounded-lg mb-4 border-4 border-red-800">
           <div className="absolute inset-0">
             <Image
-              src="https://i.imgur.com/9Ks8fzV.png"
+              src="https://i.ibb.co/qgFFsrF/2024-09-20-18-04-29-copy.png"
               alt="Battle Background"
               layout="fill"
               objectFit="fill"
-              className="max-w-[137%] h-auto"
+              className="max-w-[140%] h-auto"
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
@@ -604,7 +604,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
                   <p className="text-xs text-black">{Math.round((Number(enemyHealth) / Number(enemyData.attributes.HP)) * 100)}%</p>
                 </div>
               </div>
-              <div className={`relative z-10 ${enemyAttacking ? 'animate-attack-left' : ''} ${enemyTakingDamage ? 'animate-damage' : ''} ${enemyHealth <= 0 ? 'opacity-50' : ''}`}>
+              <div className={`relative z-10 ${enemyAttacking ? 'animate-attack-left' : ''} ${enemyTakingDamage ? 'animate-damage' : ''} ${enemyHealth <= 0 ? 'opacity-50' : ''} transform translate-x-[-10px] translate-y-[40px]`}>
                 <Image
                   src={enemyData.image_url}
                   alt={enemyData.identifier}
@@ -625,8 +625,8 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
                 <Image
                   src={playerData.image_url}
                   alt={playerData.identifier}
-                  width={140}
-                  height={140}
+                  width={160}
+                  height={160}
                   className="drop-shadow-[0_0_15px_rgba(255,255,255,0.9)] brightness-125 contrast-110"
                   unoptimized
                   priority
