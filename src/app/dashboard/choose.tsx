@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Loader2, Heart, Zap, Wind, Shield, Sparkles 
 import { useRouter } from 'next/navigation'
 import { ref, getDownloadURL } from 'firebase/storage'
 import { initializeApp } from 'firebase/app'
-import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore'
+import { getFirestore, doc, getDoc, updateDoc, increment } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { motion, AnimatePresence, useAnimation, PanInfo } from 'framer-motion'
 import { useGetAccountInfo } from '@/hooks'
@@ -234,36 +234,39 @@ export default function CharacterSelection() {
     console.log('Current games played today:', playerData?.gamesPlayedToday);
 
     if (characters.length > 0) {
-      console.log('Characters available:', characters.length);
+        console.log('Characters available:', characters.length);
 
-      // Check if games played today is 3
-      if (playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) {
-        console.log('Games played today limit reached.');
-        setCanChooseNFT(false); // Optionally set this if you want to indicate they can't choose a new character
-        return; // This will prevent the redirect
-      }
+        // Check if games played today is 3
+        if (playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) {
+            console.log('Games played today limit reached.');
+            setCanChooseNFT(false);
+            return;
+        }
 
-      console.log('Updating gamesPlayedToday in the database...');
-      // Update gamesPlayedToday in the database
-      await updateDoc(doc(db, "players", address), {
-        gamesPlayedToday: (playerData?.gamesPlayedToday || 0) + 1, // Increment games played
-      });
+        const selectedCharacter = characters[currentIndex];
+        console.log('Redirecting to game with identifier:', selectedCharacter.identifier);
 
-      console.log('Fetching updated player data...');
-      // Fetch updated player data after incrementing
-      const playerRef = doc(db, "players", address);
-      const playerSnap = await getDoc(playerRef);
-      if (playerSnap.exists()) {
-        const updatedPlayerData: PlayerData = playerSnap.data() as PlayerData;
-        setPlayerData(updatedPlayerData); // Update state with new data
-      }
+        // Update the database before redirecting
+        const docRef = doc(db, "players", address);
+        const updates = {
+            losses: increment(1),
+            gamesPlayed: increment(1),
+            gamesPlayedToday: increment(1),
+            XP: increment(-10)
+        };
+        await updateDoc(docRef, updates); // Update the database with the new values
 
-      // Redirect to the game
-      const selectedCharacter = characters[currentIndex];
-      console.log('Redirecting to game with identifier:', selectedCharacter.identifier); // Log the identifier
-      router.push(`/game?identifier=${selectedCharacter.identifier}`);
+        console.log('Fetching updated player data...');
+        const playerSnap = await getDoc(docRef);
+        if (playerSnap.exists()) {
+            const updatedPlayerData: PlayerData = playerSnap.data() as PlayerData;
+            setPlayerData(updatedPlayerData);
+        }
+
+        // Now redirect to the game
+        router.push(`/game?identifier=${selectedCharacter.identifier}`);
     } else {
-      console.log('No characters available to play.');
+        console.log('No characters available to play.');
     }
   }
 

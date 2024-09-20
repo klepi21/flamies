@@ -2,16 +2,16 @@
 
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image'
-import { Alert, AlertDescription, AlertTitle } from "../../ui/Alert"
 import { Button } from "../../ui/Button"
 import { Droplet, Cloud, Skull, Zap, Battery, Heart, Skull as SkullIcon, Infinity, Volume2, Brain } from 'lucide-react'
 import { initializeApp } from 'firebase/app'
-import { getFirestore, doc, getDoc } from 'firebase/firestore'
+import { getFirestore, doc, getDoc, increment, updateDoc, query, where, getDocs, collection } from 'firebase/firestore'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/ui/Dialog"
 import { ScrollArea } from "@/ui/ScrollArea"
 import { X } from 'lucide-react'
+import { useGetAccountInfo } from '@multiversx/sdk-dapp/hooks'
 
 // Initialize Firebase (replace with your config)
 const firebaseConfig = {
@@ -39,7 +39,7 @@ const ALL_ATTACK_TYPES = [
   { name: 'Life Drain', emoji: '💔', icon: Heart },
   { name: 'Necromancy', emoji: '💀', icon: SkullIcon },
   { name: 'Reality Warp', emoji: '🌀', icon: Infinity },
-  { name: 'Sound', emoji: '🔊', icon: Volume2 },
+  { name: 'Sound', emoji: '', icon: Volume2 },
   { name: 'Telepathy', emoji: '🧠', icon: Brain },
 ]
 
@@ -87,6 +87,12 @@ interface BattleLogEntry {
 }
 
 export default function GameArena({ identifier, enemyIdentifier }: GameArenaProps) {
+  const { address: connectedUserAddress } = useGetAccountInfo(); // Use the address from the hook
+  const [showWarningDialog, setShowWarningDialog] = useState(false); // State for the warning dialog
+  const [showEndGameDialog, setShowEndGameDialog] = useState(false);
+  const [canPlay, setCanPlay] = useState(true);
+
+  const [gameOver, setGameOver] = useState(false); // Declare gameOver state first
   const [playerHealth, setPlayerHealth] = useState(0)
   const [enemyHealth, setEnemyHealth] = useState(0)
   const [playerAttacking, setPlayerAttacking] = useState(false)
@@ -100,7 +106,6 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
   const [lastDamageReceived, setLastDamageReceived] = useState(0)
   const [totalDamageDealt, setTotalDamageDealt] = useState(0)
   const [totalDamageReceived, setTotalDamageReceived] = useState(0)
-  const [gameOver, setGameOver] = useState(false)
   const [playerWon, setPlayerWon] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
   const [battleLog, setBattleLog] = useState<BattleLogEntry[]>([]);
@@ -111,56 +116,117 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
   const [isActionInProgress, setIsActionInProgress] = useState(false);
   const [showBattleLog, setShowBattleLog] = useState(false);
 
-  const fetchPlayerData = async (retryCount = 0) => {
+  const gameEndedRef = useRef(false); // Create a ref to track if the game has ended
+
+  // Function to update player stats at the end of the game
+  const updatePlayerStats = useCallback(async (outcome: 'win' | 'loss') => {
+    if (!connectedUserAddress) {
+      console.error("Connected user address is not defined.");
+      return;
+    }
+
+    const docRef = doc(db, "players", connectedUserAddress);
+
     try {
-      const docRef = doc(db, "flamies", identifier);
-      const docSnap = await getDoc(docRef);
+      const updates: any = {
+        gamesPlayed: increment(1),
+        gamesPlayedToday: increment(1),
+      };
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        console.log("Raw player data:", data);
+      if (outcome === 'win') {
+        updates.wins = increment(1);
+        updates.XP = increment(50);
+      } else {
+        updates.losses = increment(1);
+        updates.XP = increment(30);
+      }
 
-        interface Attribute {
-          trait_type: string;
-          value: string | number;
+      await updateDoc(docRef, updates);
+      console.log("Player stats updated successfully based on game outcome:", updates);
+    } catch (error) {
+      console.error("Error updating player stats:", error);
+    }
+  }, [connectedUserAddress]);
+
+  // Function to end the game and update stats
+  const endGame = useCallback((playerWon: boolean) => {
+    if (gameOver || gameEndedRef.current) return; // Prevent multiple calls
+    gameEndedRef.current = true; // Set the ref to true to indicate the game has ended
+    setGameOver(true);
+    setPlayerWon(playerWon);
+    updatePlayerStats(playerWon ? 'win' : 'loss');
+    setShowEndGameDialog(true);
+    console.log("Game ended, updating stats for:", playerWon ? 'win' : 'loss');
+  }, [updatePlayerStats, gameOver]);
+
+  const fetchPlayerData = useCallback(async (retryCount = 0) => {
+    try {
+      const playersRef = collection(db, "players");
+      const q = query(playersRef, where("account", "==", connectedUserAddress)); // Use connectedUserAddress in the query
+
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const playerDoc = querySnapshot.docs[0].data(); // Get the first matching document
+        const playerIdentifier = playerDoc.ChoosedNFT; // Use ChoosedNFT instead of identifier
+
+        console.log("Raw player data:", playerDoc);
+
+        // Check gamesPlayedToday
+        if (playerDoc.gamesPlayedToday >= 3) {
+          setCanPlay(false);
+          return;
         }
 
-        const attributes = data.attributes.reduce((acc: Record<string, string | number>, attr: Attribute) => {
-          acc[attr.trait_type] = attr.value;
-          return acc;
-        }, {});
+        // Ensure playerIdentifier is defined before proceeding
+        if (!playerIdentifier) {
+          console.error("Player identifier is undefined.");
+          return;
+        }
 
-        const processedData: PlayerData = {
-          identifier: data.identifier,
-          image_url: data.image_url,
-          attributes: attributes
-        };
+        // Now fetch the player data using the ChoosedNFT as the identifier
+        const playerDocRef = doc(db, "flamies", playerIdentifier); // Use ChoosedNFT to fetch from flamies collection
+        const playerDocSnap = await getDoc(playerDocRef);
 
-        setPlayerData(processedData);
-        setPlayerHealth(Number(processedData.attributes.HP));
-        console.log("Processed player attributes:", processedData.attributes);
+        if (playerDocSnap.exists()) {
+          const playerDataFromFlamies = playerDocSnap.data();
+          console.log("Raw player data from flamies:", playerDataFromFlamies);
+
+          // Ensure attributes are correctly structured
+          if (playerDataFromFlamies.attributes) { // Check playerDataFromFlamies for attributes
+            // Define the Attribute interface here
+            interface Attribute {
+              trait_type: string;
+              value: string | number;
+            }
+            const attributes = playerDataFromFlamies.attributes.reduce((acc: Record<string, string | number>, attr: Attribute) => {
+              acc[attr.trait_type] = attr.value;
+              return acc;
+            }, {});
+
+            const processedData: PlayerData = {
+              identifier: playerIdentifier,
+              image_url: playerDataFromFlamies.image_url,
+              attributes: attributes
+            };
+
+            setPlayerData(processedData);
+            setPlayerHealth(Number(processedData.attributes.HP));
+            console.log("Processed player attributes:", processedData.attributes);
+          } else {
+            console.error("Attributes not found in player data from flamies.");
+          }
+        } else {
+          console.log("No such document in flamies collection for player data!");
+        }
       } else {
-        console.log("No such document!");
-        const fallbackData = getFallbackPlayerData();
-        setPlayerData(fallbackData);
-        setPlayerHealth(fallbackData.attributes.HP);
+        console.log("No such document in players collection!");
       }
     } catch (error) {
       console.error("Error fetching player data:", error);
-      
-      if (retryCount < MAX_RETRIES) {
-        console.log(`Retrying... Attempt ${retryCount + 1} of ${MAX_RETRIES}`);
-        setTimeout(() => fetchPlayerData(retryCount + 1), RETRY_DELAY);
-      } else {
-        console.error("Max retries reached. Using fallback data.");
-        const fallbackData = getFallbackPlayerData();
-        setPlayerData(fallbackData);
-        setPlayerHealth(fallbackData.attributes.HP);
-      }
     }
-  };
+  }, [connectedUserAddress]);
 
-  const fetchEnemyData = async (retryCount = 0) => {
+  const fetchEnemyData = useCallback(async (retryCount = 0) => {
     try {
       const docRef = doc(db, "flamies", enemyIdentifier);
       const docSnap = await getDoc(docRef);
@@ -207,12 +273,12 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         setEnemyHealth(Number(fallbackData.attributes.HP));
       }
     }
-  };
+  }, [enemyIdentifier]);
 
   useEffect(() => {
     fetchPlayerData();
     fetchEnemyData();
-  }, [identifier, enemyIdentifier]);
+  }, [identifier, enemyIdentifier, fetchPlayerData, fetchEnemyData]);
 
   useEffect(() => {
     if (playerData && enemyData) {
@@ -412,7 +478,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
       }
       setIsActionInProgress(false);
     }, 1000)
-  }, [gameOver, calculateDamage, createParticles, playerData, enemyData, calculateDodgeChance, isActionInProgress])
+  }, [gameOver, calculateDamage, createParticles, playerData, enemyData, calculateDodgeChance, isActionInProgress, endGame])
 
   const playerAttack = useCallback((attackType: { name: string }) => {
     console.log("Player attacking with:", attackType);
@@ -429,14 +495,8 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
 
       return () => clearTimeout(enemyAttackTimeout)
     }
-  }, [currentTurn, gameOver, attack, enemyAttackTypes, isActionInProgress])
+  }, [currentTurn, gameOver, attack, enemyAttackTypes, isActionInProgress]);
 
-  const endGame = (playerWon: boolean) => {
-    setGameOver(true)
-    setPlayerWon(playerWon)
-    setShowAlert(true)
-    setBattleLog((prev) => [...prev, { attacker: playerWon ? 'You' : 'Enemy', attack: playerWon ? 'Victory' : 'Defeat', damage: 0 }]);
-  }
 
   useEffect(() => {
     if (currentTurn === 'player') {
@@ -448,12 +508,40 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
     setShowBattleLog(prev => !prev);
   }, []);
 
+  const handleSelectButtonClick = () => {
+    setShowWarningDialog(true);
+  };
+
+  if (!canPlay) {
+    return <div>You cannot play more matches today. Please come back tomorrow.</div>;
+  }
+
   if (!playerData || !enemyData) {
     return <div>Loading...</div>
   }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-transparent">
+      {/* Warning Dialog */}
+      <Dialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
+        <DialogContent className="sm:max-w-[425px] bg-gray-900 border-2 border-cyan-500 text-white p-4">
+          <DialogHeader className="bg-gradient-to-r from-red-900 to-red-950 p-4 relative">
+            <DialogTitle className="text-2xl font-bold text-cyan-400">Warning</DialogTitle>
+            <button
+              onClick={() => setShowWarningDialog(false)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors"
+            >
+              X
+            </button>
+          </DialogHeader>
+          <DialogDescription className="text-gray-300">
+            If you refresh or close the browser you will get a Loss and a Decrease on your XP.
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
+
+      
+
       <div className="relative w-full max-w-[480px] h-[720px] bg-gradient-to-b from-red-900 to-red-950 rounded-[45px] p-8 shadow-xl overflow-hidden">
         {/* Fiery pattern */}
         <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -472,6 +560,20 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
           </div>
         </div>
         
+
+         {/* Return to Dashboard button */}
+         {gameOver && (
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 ">
+                    <Button
+                        onClick={() => window.location.href = '/dashboard'}
+                        className="bg-red-800 hover:bg-white text-black font-bold py-2 px-4 rounded"
+                    >
+                        Return to Dashboard
+                    </Button>
+                </div>
+            )}
+
+            
         {/* Main GameBoy screen */}
         <div className="relative w-full h-[320px] bg-transparent overflow-hidden rounded-lg mb-4 border-4 border-red-800">
           <div className="absolute inset-0">
@@ -607,6 +709,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         {/* Start and Select buttons */}
         <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex space-x-4 z-20">
           <Button
+            onClick={handleSelectButtonClick}
             className="w-16 h-8 bg-red-800 hover:bg-red-700 text-white text-xs font-bold rounded-full transform rotate-[-20deg] focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
           >
             SELECT
@@ -621,39 +724,10 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
 
         {/* QuantumX Network branding */}
         <div className="absolute bottom-4 left-0 right-0 text-center z-10">
-          <p className="text-white text-lg font-bold tracking-wide">QuantumX Network</p>
+          <p className="text-white text-md font-bold tracking-wide">QuantumX Network</p>
         </div>
       </div>
 
-      {showAlert && (
-        <Alert className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 z-50 bg-gray-900 border-2 border-cyan-500 text-white">
-          <AlertTitle className="text-2xl font-bold text-cyan-400">{playerWon ? 'Victory!' : 'Defeat!'}</AlertTitle>
-          <AlertDescription className="text-gray-300">
-            <p>{playerWon ? 'You won the battle!' : 'You lost the battle!'}</p>
-            <p>Total Damage Dealt: <span className="text-yellow-400">{totalDamageDealt}</span></p>
-            <p>Total Damage Received: <span className="text-red-400">{totalDamageReceived}</span></p>
-            <p>Accuracy: <span className="text-green-400">{((totalDamageDealt / (totalDamageDealt + totalDamageReceived)) * 100).toFixed(2)}%</span></p>
-            <p>Turns: <span className="text-cyan-400">{battleLog.length}</span></p>
-            <div className="mt-2 max-h-40 overflow-y-auto">
-              <p className="font-bold text-cyan-400">Battle Log:</p>
-              {battleLog.map((log, index) => (
-                <p key={index} className="text-sm">
-                  <span className="font-bold text-cyan-400">{log.attacker}</span>
-                  <span className="text-gray-300"> used </span>
-                  <span className="font-bold text-yellow-400">{log.attack}</span>
-                  <span className="text-gray-300"> for </span>
-                  <span className="font-bold text-red-400">{log.damage}</span>
-                  <span className="text-gray-300"> damage</span>
-                </p>
-              ))}
-            </div>
-            <Button onClick={() => setShowAlert(false)} className="mt-4 bg-red-600 hover:bg-red-700 text-white">
-              Close
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-      
       {/* Battle Log Dialog */}
       <Dialog open={showBattleLog} onOpenChange={setShowBattleLog}>
         <DialogContent className="sm:max-w-[425px] bg-gray-900 border-2 border-cyan-500 text-white p-0 overflow-hidden">
@@ -686,6 +760,29 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
           </div>
         </DialogContent>
       </Dialog>
+      
+      {showEndGameDialog && (
+        <Dialog open={showEndGameDialog} onOpenChange={setShowEndGameDialog}>
+          <DialogContent className="sm:max-w-[425px] bg-gray-900 border-2 border-cyan-500 text-white p-4">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-cyan-400">
+                {playerWon ? 'Victory!' : 'Defeat!'}
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-gray-300">
+              {playerWon
+                ? 'Congratulations! You have won the battle.'
+                : 'Better luck next time. You have been defeated.'}
+            </p>
+            <Button
+              onClick={() => setShowEndGameDialog(false)}
+              className="mt-4 bg-cyan-600 hover:bg-cyan-700 text-white"
+            >
+              Close
+            </Button>
+          </DialogContent>
+        </Dialog>
+      )}
       
       <style jsx global>{`
         @keyframes attack-right {
