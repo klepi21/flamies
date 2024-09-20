@@ -589,16 +589,20 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
           </div>
           <div className="absolute inset-0 flex flex-col items-center justify-end p-4">
             <div className="w-full flex justify-between items-end mb-4">
-              <div className="bg-white bg-opacity-80 rounded-lg p-2 w-40 z-10">
-              <h3 className="text-sm font-bold mb-1 text-black">{'Enemy'}</h3>
-               { /*} <h3 className="text-sm font-bold mb-1 text-black">{enemyData.identifier || 'Enemy'}</h3> */}
+            <div className="relative bg-white bg-opacity-60 rounded-lg p-2 w-48 z-10 -mt-22">
+                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 w-3 h-6 bg-white bg-opacity-30 border-t border-b border-l border-gray-300 clip-arrow-right"></div>
+                <h3 className="text-sm font-bold mb-1 text-black">{'Enemy'}</h3>
+                {/* <h3 className="text-sm font-bold mb-1 text-black">{enemyData.identifier || 'Enemy'}</h3> */}
                 <div className="h-3 w-full bg-gray-300 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-red-500 transition-all duration-300 ease-out"
+                    className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-300 ease-out"
                     style={{ width: `${(Number(enemyHealth) / Number(enemyData.attributes.HP)) * 100}%` }}
                   />
                 </div>
-                <p className="text-xs mt-1 text-black">{enemyHealth}/{enemyData.attributes.HP} HP</p>
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-black">{enemyHealth}/{enemyData.attributes.HP} HP</p>
+                  <p className="text-xs text-black">{Math.round((Number(enemyHealth) / Number(enemyData.attributes.HP)) * 100)}%</p>
+                </div>
               </div>
               <div className={`relative z-10 ${enemyAttacking ? 'animate-attack-left' : ''} ${enemyTakingDamage ? 'animate-damage' : ''} ${enemyHealth <= 0 ? 'opacity-50' : ''}`}>
                 <Image
@@ -632,16 +636,20 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
                   <Particle key={particle.id} style={particle.style} emoji={particle.emoji} />
                 ))}
               </div>
-              <div className="bg-white bg-opacity-80 rounded-lg p-2 w-40 z-10">
-              <h3 className="text-sm font-bold mb-1 text-black">{'You'}</h3>
-              {/* <h3 className="text-sm font-bold mb-1 text-black">{playerData.identifier || 'You'}</h3> */}
+              <div className="relative bg-white bg-opacity-60 rounded-lg p-2 w-48 z-10 mt-16">
+                <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1/2 w-3 h-6 bg-white bg-opacity-30 border-t border-b border-r border-gray-300 clip-arrow"></div>
+                <h3 className="text-sm font-bold mb-1 text-black">{'You'}</h3>
+                {/* <h3 className="text-sm font-bold mb-1 text-black">{playerData.identifier || 'You'}</h3> */}
                 <div className="h-3 w-full bg-gray-300 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-green-500 transition-all duration-300 ease-out"
+                    className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-300 ease-out"
                     style={{ width: `${(playerHealth / playerData.attributes.HP) * 100}%` }}
                   />
                 </div>
-                <p className="text-xs mt-1 text-black">{playerHealth}/{playerData.attributes.HP} HP</p>
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-black">{playerHealth}/{playerData.attributes.HP} HP</p>
+                  <p className="text-xs text-black">{Math.round((playerHealth / playerData.attributes.HP) * 100)}%</p>
+                </div>
               </div>
             </div>
           </div>
@@ -822,6 +830,14 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
           --ty: ${Math.random() * -120 - 30}px;
           --rotation: ${Math.random() * 360}deg;
           animation: particle 1s ease-out forwards;
+        }
+
+        .clip-arrow-right {
+          clip-path: polygon(100% 50%, 0% 0%, 0% 100%);
+        }
+
+        .clip-arrow {
+          clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
         }
       `}</style>
     </div>
