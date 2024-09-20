@@ -93,6 +93,8 @@ export default function CharacterSelection() {
     'erd17278gc0z9v08a5gszejnug992v02zexr4m6xx0w8tal9p3z6a23q2q2vkx',
     'erd1lzw8h6y4d8ep74d32xeva9wcrxkdtfhdm7rw3exq6ln3s7395t9s4uccfh',
     'erd1muea9hr5wyh7fgdxsermqf9k90hg05483e08q6n7ap8qagw2haysf6807q',
+    'erd1yng4ajnxp03lx5erwcq57m5502m6t9nxajf5hv9nw0k27t8zcq4qq3vu4v',
+    'erd1lnmfa5p9j6qy40kjtrf0wfq6cl056car6hyvrq5uxdcalc2gu7zsrwalel',
   ], []);
 
   const [characters, setCharacters] = useState<NFT[]>([])
@@ -111,6 +113,7 @@ export default function CharacterSelection() {
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false)
   const [hasChosenNFT, setHasChosenNFT] = useState(false)
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   useEffect(() => {
     setIsAllowedAddress(allowedAddresses.includes(address));
@@ -233,6 +236,9 @@ export default function CharacterSelection() {
   }
 
   const handlePlay = async () => {
+    if (isButtonDisabled) return; // Prevent further clicks if the button is disabled
+    setIsButtonDisabled(true); // Disable the button
+
     console.log('Play button clicked');
     console.log('Current games played today:', playerData?.gamesPlayedToday);
 
@@ -395,9 +401,8 @@ export default function CharacterSelection() {
           </div>
           {!(playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) && (
             <motion.button 
-              whileHover={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" } : {}}
-              whileTap={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 0.95 } : {}}
-              onClick={handlePlay} // Ensure this is set to handlePlay directly
+              onClick={handlePlay}
+              disabled={isButtonDisabled}
               className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
                 isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
                   ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
@@ -578,9 +583,8 @@ export default function CharacterSelection() {
 
             {!(playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) && (
               <motion.button 
-                whileHover={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 1.05, boxShadow: "0px 0px 8px rgb(59, 130, 246)" } : {}}
-                whileTap={isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 ? { scale: 0.95 } : {}}
-                onClick={handlePlay} // Ensure this is set to handlePlay directly
+                onClick={handlePlay}
+                disabled={isButtonDisabled}
                 className={`px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
                   isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
                     ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 

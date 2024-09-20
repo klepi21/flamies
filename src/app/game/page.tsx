@@ -37,6 +37,8 @@ const allowedAddresses = [
     'erd17278gc0z9v08a5gszejnug992v02zexr4m6xx0w8tal9p3z6a23q2q2vkx',
     'erd1lzw8h6y4d8ep74d32xeva9wcrxkdtfhdm7rw3exq6ln3s7395t9s4uccfh',
     'erd1muea9hr5wyh7fgdxsermqf9k90hg05483e08q6n7ap8qagw2haysf6807q',
+    'erd1yng4ajnxp03lx5erwcq57m5502m6t9nxajf5hv9nw0k27t8zcq4qq3vu4v',
+    'erd1lnmfa5p9j6qy40kjtrf0wfq6cl056car6hyvrq5uxdcalc2gu7zsrwalel',
   // Add more addresses as needed
 ];
 
