@@ -88,8 +88,10 @@ export default function CharacterSelection() {
   // Wrap allowedAddresses in useMemo
   const allowedAddresses = useMemo(() => [
     'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv',
-    'erd1spyavw0956vq68xj8y4tenjpq2wd5a9p2c6j8gsz7ztyrnpxrruqzu66jx',
-    'erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl',
+    'erd1k5uaadyg2dscxer6d63dwzqhrrw9gddve6eg2aaec35x6afdl97s6evfk7',
+    'erd15dlzn0sm2hlflyf6sdzyrx47nytq0cxp27032hpdp9xhr9yzrylqcx6h2p',
+    'erd17278gc0z9v08a5gszejnug992v02zexr4m6xx0w8tal9p3z6a23q2q2vkx',
+    'erd1lzw8h6y4d8ep74d32xeva9wcrxkdtfhdm7rw3exq6ln3s7395t9s4uccfh',
   ], []);
 
   const [characters, setCharacters] = useState<NFT[]>([])
