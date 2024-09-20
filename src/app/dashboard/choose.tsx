@@ -235,6 +235,23 @@ export default function CharacterSelection() {
     controls.start({ x: 0 })
   }
 
+  const handleChoose = async () => {
+    if (isButtonDisabled) return; // Prevent further clicks if the button is disabled
+    setIsButtonDisabled(true); // Disable the button
+
+    const selectedCharacter = characters[currentIndex];
+    console.log('Updating database with chosen character:', selectedCharacter.identifier);
+
+    // Update the database with the chosen NFT
+    await updateDoc(doc(db, "players", address), {
+        lastChoosenTimeStamp: new Date(),
+        ChoosedNFT: selectedCharacter.identifier,
+    });
+
+    // Reload the page after updating
+    window.location.reload();
+};
+
   const handlePlay = async () => {
     if (isButtonDisabled) return; // Prevent further clicks if the button is disabled
     setIsButtonDisabled(true); // Disable the button
@@ -581,11 +598,27 @@ export default function CharacterSelection() {
               </p>
             )}
 
-            {!(playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) && (
+            {/* Choose Button */}
+            {!hasChosenNFT && (
               <motion.button 
-                onClick={handlePlay}
-                disabled={isButtonDisabled}
-                className={`px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
+                onClick={handleChoose} // Call handleChoose on click
+                disabled={isButtonDisabled} // Disable if in progress
+                className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
+                  isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
+                    ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
+                    : "bg-gray-500 cursor-not-allowed"
+                }`}
+              >
+                Choose
+              </motion.button>
+            )}
+
+            {/* Play Button */}
+            {hasChosenNFT && (
+              <motion.button 
+                onClick={handlePlay} // Keep handlePlay for the play button
+                disabled={isButtonDisabled} // Disable if in progress
+                className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
                   isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
                     ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
                     : "bg-gray-500 cursor-not-allowed"
