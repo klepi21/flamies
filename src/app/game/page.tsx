@@ -7,7 +7,6 @@ import { AuthRedirectWrapper } from '@/wrappers'
 import { ClientHooks } from '@/components/ClientHooks'
 import GameArena from './gameArena'
 import { db } from '@/firebase/config'
-import { useGetAccountInfo } from '@multiversx/sdk-dapp/hooks'
 
 const fetchRandomEnemyIdentifier = async (playerIdentifier: string) => {
   try {
