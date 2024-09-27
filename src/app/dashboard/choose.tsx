@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Loader2, Heart, Zap, Wind, Shield, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -95,7 +95,6 @@ export default function CharacterSelection() {
   const router = useRouter()
   const controls = useAnimation()
   const constraintsRef = useRef<HTMLDivElement>(null)
-  const [isAllowedAddress, setIsAllowedAddress] = useState(false)
   const { address } = useGetAccountInfo()
   const [canChooseNFT, setCanChooseNFT] = useState(true)
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false)
@@ -103,9 +102,6 @@ export default function CharacterSelection() {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
-  useEffect(() => {
-    setIsAllowedAddress(true); // Allow all addresses
-  }, [address]);
 
   useEffect(() => {
     const fetchPlayerData = async () => {

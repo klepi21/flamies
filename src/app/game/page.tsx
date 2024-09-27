@@ -36,7 +36,6 @@ export default function Game() {
   const identifier = searchParams.get('identifier')
   const [enemyIdentifier, setEnemyIdentifier] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { address } = useGetAccountInfo()
 
   useEffect(() => {
     const fetchEnemy = async () => {
