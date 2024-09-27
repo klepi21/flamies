@@ -85,18 +85,6 @@ interface PlayerData {
 export default function CharacterSelection() {
   const [playerData, setPlayerData] = useState<PlayerData | null>(null);
 
-  // Wrap allowedAddresses in useMemo
-  const allowedAddresses = useMemo(() => [
-    'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv',
-    'erd1k5uaadyg2dscxer6d63dwzqhrrw9gddve6eg2aaec35x6afdl97s6evfk7',
-    'erd15dlzn0sm2hlflyf6sdzyrx47nytq0cxp27032hpdp9xhr9yzrylqcx6h2p',
-    'erd17278gc0z9v08a5gszejnug992v02zexr4m6xx0w8tal9p3z6a23q2q2vkx',
-    'erd1lzw8h6y4d8ep74d32xeva9wcrxkdtfhdm7rw3exq6ln3s7395t9s4uccfh',
-    'erd1muea9hr5wyh7fgdxsermqf9k90hg05483e08q6n7ap8qagw2haysf6807q',
-    'erd1yng4ajnxp03lx5erwcq57m5502m6t9nxajf5hv9nw0k27t8zcq4qq3vu4v',
-    'erd1lnmfa5p9j6qy40kjtrf0wfq6cl056car6hyvrq5uxdcalc2gu7zsrwalel',
-  ], []);
-
   const [characters, setCharacters] = useState<NFT[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -116,8 +104,8 @@ export default function CharacterSelection() {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   useEffect(() => {
-    setIsAllowedAddress(allowedAddresses.includes(address));
-  }, [address, allowedAddresses]);
+    setIsAllowedAddress(true); // Allow all addresses
+  }, [address]);
 
   useEffect(() => {
     const fetchPlayerData = async () => {
@@ -135,7 +123,7 @@ export default function CharacterSelection() {
     };
 
     fetchPlayerData();
-  }, [address, allowedAddresses]);
+  }, [address]);
 
   useEffect(() => {
     const fetchImageUrl = async () => {
@@ -262,8 +250,8 @@ export default function CharacterSelection() {
     if (characters.length > 0) {
         console.log('Characters available:', characters.length);
 
-        // Check if games played today is 3
-        if (playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) {
+        // Check if games played today is 40
+        if (playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 40) {
             console.log('Games played today limit reached.');
             setCanChooseNFT(false);
             return;
@@ -399,10 +387,10 @@ export default function CharacterSelection() {
                     <td className="py-2 pr-4 font-semibold">Games Played Today:</td>
                     <td className="py-2">{playerData?.gamesPlayedToday || 0}</td>
                   </tr>
-                  {playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3 && (
+                  {playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 40 && (
                     <tr className="border-b border-gray-700">
                       <td className="py-2 pr-4 font-semibold text-red-500" colSpan={2}>
-                        You cannot play another game today. You have reached the limit of 3 games.
+                        You cannot play another game today. You have reached the limit of 40 games.
                       </td>
                     </tr>
                   )}
@@ -416,12 +404,12 @@ export default function CharacterSelection() {
               </table>
             </div>
           </div>
-          {!(playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 3) && (
+          {!(playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday >= 40) && (
             <motion.button 
               onClick={handlePlay}
               disabled={isButtonDisabled}
               className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
-                isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
+                playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 40 
                   ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
                   : "bg-gray-500 cursor-not-allowed"
               }`}
@@ -429,9 +417,9 @@ export default function CharacterSelection() {
               Play
             </motion.button>
           )}
-          {playerData?.gamesPlayedToday === 3 && (
+          {playerData?.gamesPlayedToday === 40 && (
             <p className="mt-4 text-red-500">
-              You cannot play another game today. You have reached the limit of 3 games.
+              You cannot play another game today. You have reached the limit of 40 games.
             </p>
           )}
         </div>
@@ -604,7 +592,7 @@ export default function CharacterSelection() {
                 onClick={handleChoose} // Call handleChoose on click
                 disabled={isButtonDisabled} // Disable if in progress
                 className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
-                  isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
+                  playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 40 
                     ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
                     : "bg-gray-500 cursor-not-allowed"
                 }`}
@@ -619,7 +607,7 @@ export default function CharacterSelection() {
                 onClick={handlePlay} // Keep handlePlay for the play button
                 disabled={isButtonDisabled} // Disable if in progress
                 className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
-                  isAllowedAddress && playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 3 
+                  playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 40 
                     ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
                     : "bg-gray-500 cursor-not-allowed"
                 }`}
@@ -627,14 +615,9 @@ export default function CharacterSelection() {
                 Play
               </motion.button>
             )}
-            {playerData?.gamesPlayedToday === 3 && (
+            {playerData?.gamesPlayedToday === 40 && (
               <p className="mt-4 text-red-500">
-                You cannot play another game today. You have reached the limit of 3 games.
-              </p>
-            )}
-            {!isAllowedAddress && (
-              <p className="mt-4 text-red-500">
-                Your address is not on the beta access list.
+                You cannot play another game today. You have reached the limit of 40 games.
               </p>
             )}
           </motion.div>
