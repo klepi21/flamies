@@ -220,21 +220,32 @@ export default function CharacterSelection() {
     controls.start({ x: 0 })
   }
 
-  const handleChoose = async () => {
+  const handleChooseOrPlay = async () => {
     if (isButtonDisabled) return; // Prevent further clicks if the button is disabled
     setIsButtonDisabled(true); // Disable the button
 
-    const selectedCharacter = characters[currentIndex];
-    console.log('Updating database with chosen character:', selectedCharacter.identifier);
+    if (hasChosenNFT) {
+      // If an NFT has been chosen, start the game
+      const selectedCharacter = characters[currentIndex];
+      console.log('Redirecting to game with identifier:', selectedCharacter.identifier);
 
-    // Update the database with the chosen NFT
-    await updateDoc(doc(db, "players", address), {
+      // Redirect to the game
+      router.push(`/game?identifier=${selectedCharacter.identifier}`);
+    } else {
+      // If no NFT has been chosen, update the database with the chosen NFT
+      const selectedCharacter = characters[currentIndex];
+      console.log('Updating database with chosen character:', selectedCharacter.identifier);
+
+      await updateDoc(doc(db, "players", address), {
         lastChoosenTimeStamp: new Date(),
         ChoosedNFT: selectedCharacter.identifier,
-    });
+      });
 
-    // Reload the page after updating
-    window.location.reload();
+      // Set hasChosenNFT to true after choosing
+      setHasChosenNFT(true);
+    }
+
+    setIsButtonDisabled(false); // Re-enable the button after the operation
   };
 
   const handlePlay = async () => {
@@ -583,35 +594,19 @@ export default function CharacterSelection() {
               </p>
             )}
 
-            {/* Choose Button */}
-            {!hasChosenNFT && (
-              <motion.button 
-                onClick={handleChoose} // Call handleChoose on click
-                disabled={isButtonDisabled} // Disable if in progress
-                className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
-                  playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 40 
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
-                    : "bg-gray-500 cursor-not-allowed"
-                }`}
-              >
-                Choose
-              </motion.button>
-            )}
+            {/* Choose or Play Button */}
+            <motion.button 
+              onClick={handleChooseOrPlay} // Call the new combined function
+              disabled={isButtonDisabled} // Disable if in progress
+              className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
+                playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 40 
+                  ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
+                  : "bg-gray-500 cursor-not-allowed"
+              }`}
+            >
+              {hasChosenNFT ? "Play" : "Choose"} {/* Change button text based on state */}
+            </motion.button>
 
-            {/* Play Button */}
-            {hasChosenNFT && (
-              <motion.button 
-                onClick={handlePlay} // Keep handlePlay for the play button
-                disabled={isButtonDisabled} // Disable if in progress
-                className={`mt-8 px-12 py-6 text-3xl font-bold text-white rounded-2xl ${
-                  playerData?.gamesPlayedToday !== undefined && playerData.gamesPlayedToday < 40 
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-pointer" 
-                    : "bg-gray-500 cursor-not-allowed"
-                }`}
-              >
-                Play
-              </motion.button>
-            )}
             {playerData?.gamesPlayedToday === 40 && (
               <p className="mt-4 text-red-500">
                 You cannot play another game today. You have reached the limit of 40 games.
