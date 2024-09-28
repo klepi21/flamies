@@ -172,7 +172,7 @@ export default function GameArena({ identifier, enemyIdentifier }: GameArenaProp
         console.log("Raw player data:", playerDoc);
 
         // Check gamesPlayedToday
-        if (playerDoc.gamesPlayedToday > 3) {
+        if (playerDoc.gamesPlayedToday > 40) {
           setCanPlay(false);
           return;
         }
