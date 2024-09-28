@@ -111,7 +111,8 @@ export default function CharacterSelection() {
         if (playerSnap.exists()) {
           const playerData: PlayerData = playerSnap.data() as PlayerData;
           setPlayerData(playerData);
-          setHasChosenNFT(!!playerData.ChoosedNFT);
+          // Allow re-selection of NFT
+          setHasChosenNFT(false); // Reset to allow choosing again
         } else {
           console.log("No player data found for this address.");
         }
@@ -234,7 +235,7 @@ export default function CharacterSelection() {
 
     // Reload the page after updating
     window.location.reload();
-};
+  };
 
   const handlePlay = async () => {
     if (isButtonDisabled) return; // Prevent further clicks if the button is disabled
